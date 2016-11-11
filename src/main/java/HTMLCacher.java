@@ -1,3 +1,4 @@
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -108,5 +109,35 @@ public class HTMLCacher {
         imageSrc = imageSrc.substring(0,pos);
         int posStar = imageSrc.lastIndexOf("/");
        return imageSrc.substring(posStar+1);
+    }
+
+    public boolean isEndPage(String href){
+        if(StringUtils.isEmpty(href)){
+            System.out.println("传入的连接地址为空！");
+        }
+        String htmlContent = null;
+        try {
+            htmlContent = getHTMLContent(href);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if(StringUtils.isEmpty(htmlContent)){
+            System.out.println("通过连接获取到html为空href:"+href);
+        }
+       int indexOfNextPage =  htmlContent.indexOf("下一页");
+        String temp = null;
+        if(indexOfNextPage>0){
+            temp = htmlContent.substring(indexOfNextPage-40,indexOfNextPage);
+            int tempIndex = temp.indexOf("p=");
+            if(tempIndex>0){
+                temp = temp.substring(tempIndex,temp.lastIndexOf("\">"));
+                return href.indexOf(temp)>0? true : false;
+            }else{
+                System.out.println("下一页超链接没有找到p=关键字");
+                return true;
+            }
+        }else{
+            return true;
+        }
     }
 }

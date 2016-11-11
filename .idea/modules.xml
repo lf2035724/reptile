@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/reptile.iml" filepath="$PROJECT_DIR$/reptile.iml" />
       <module fileurl="file://D://aucross//reptile/reptile.iml" filepath="D://aucross//reptile/reptile.iml" />
     </modules>
   </component>
