@@ -14,6 +14,7 @@ import org.htmlparser.util.SimpleNodeIterator;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
+import java.util.regex.Pattern;
 
 /**
  * Created by li on 2016-11-1.
@@ -49,17 +50,42 @@ public class HTMLCacher {
                     e.printStackTrace();
                 }
             }
-            System.out.println(content);
             return content;
         }
     }
 
     public NodeList getNodeList(String url, String tagName, String attributeName, String attributeValue)
             throws Exception {
-        Parser parser = new Parser(url);
+        Parser parser = null;
+        try {
+            parser = new Parser(url);
+        }catch (Exception ex){
+            throw new Exception("警告！该连接失效："+url);
+        }
         AndFilter andFilter = new AndFilter(
                 new TagNameFilter(tagName),
                 new HasAttributeFilter(attributeName, attributeValue)
+        );
+        NodeList nodes = parser.parse(andFilter);
+        return nodes;
+    }
+
+    public NodeList getNodeList(Parser parser, String tagName, String attributeName, String attributeValue)
+            throws Exception {
+        AndFilter andFilter = new AndFilter(
+                new TagNameFilter(tagName),
+                new HasAttributeFilter(attributeName, attributeValue)
+        );
+        NodeList nodes = parser.parse(andFilter);
+        return nodes;
+    }
+
+    public NodeList getLinkNodeListByRegex(String url, String tagName, String attributeRegex)
+            throws Exception {
+        Parser parser = new Parser(url);
+        AndFilter andFilter = new AndFilter(
+                new TagNameFilter(tagName),
+                new LinkRegexFilter(attributeRegex)
         );
         NodeList nodes = parser.parse(andFilter);
         return nodes;
@@ -124,65 +150,10 @@ public class HTMLCacher {
         return imageSrc.substring(posStar + 1);
     }
 
-    public boolean isEndPage(String href) {
-        if (StringUtils.isEmpty(href)) {
-            System.out.println("警告！地址为空！");
-        }
-        String html = null;
-        try {
-            html = getHTMLContent(href);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        NodeList nodeList = null;
-        String linkhref = null;
-        if (html.indexOf("下一页") > 1) {
-            try {
-                nodeList = this.getNodeList(href, "a", "&p=");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            SimpleNodeIterator sni = null;
-            LinkTag linkTag = null;
-            if (nodeList != null) {
-                sni = nodeList.elements();
-                while (sni.hasMoreNodes()) {
-                    linkTag = (LinkTag) sni.nextNode();
-                    if (linkTag.getLinkText() != null && linkTag.getLinkText().indexOf("下一页") >= 0) {
-                        break;
-                    }
-                }
-                if (linkTag == null) {
-                    System.out.println("没有找到下一页对应的node");
-                    return false;
-                } else {
-                    linkhref = linkTag.getLink();
-                    System.out.println("111111111111111");
-                    System.out.println(linkTag.getLinkText());
-                    System.out.println(linkhref);
-                }
-            }
-        } else {
-            System.out.println("没有找到下一页对应的node2");
-            return false;
-        }
-        int attrIndex = linkhref.indexOf("&p=");
-        if (attrIndex < 1) {
-            System.out.println("根据href没有找到&p=");
-        }
-        String tempStr = linkhref.substring(attrIndex + 1, linkhref.length());
-        attrIndex = tempStr.indexOf("&");
-        tempStr = tempStr.substring(0, attrIndex);
-        if (href.indexOf(tempStr) > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public boolean isEndPage(String href){
         if(StringUtils.isEmpty(href)){
-            System.out.println("传入的连接地址为空！");
+            System.out.println("传入的连接地址为空！是最后一页");
+            return true;
         }
         String htmlContent = null;
         try {

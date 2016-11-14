@@ -2,13 +2,16 @@ import jxl.Workbook;
 import jxl.write.Label;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
 import org.htmlparser.tags.LinkTag;
-import org.htmlparser.util.IteratorImpl;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.SimpleNodeIterator;
 
-import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by li on 2016-11-2.
@@ -36,6 +39,35 @@ public class ExcelHandller {
             ws.addCell(labels1);
             y++;
         }
+            wwb.write();
+            wwb.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void writeExcel(OutputStream os
+            , List<String> nameList, Map<String,List<String>> valueMap)
+    {
+        WritableWorkbook wwb = null;
+        WritableSheet ws = null;
+        try
+        {
+            wwb = Workbook.createWorkbook(os);
+            ws = wwb.createSheet("sheet",0);
+            Label label = null;
+            Label label2 = null;
+            Iterator iterator = null;
+            for(int i=0;i<nameList.size();i++){
+                label =  new Label(i,0,nameList.get(i));
+                ws.addCell(label);
+                for(int j = 0;j<valueMap.get(nameList.get(i)).size();j++){
+                    label2 = new Label(i,j+1,(String)valueMap.get(nameList.get(i)).get(j));
+                    ws.addCell(label2);
+                }
+            }
             wwb.write();
             wwb.close();
         }
