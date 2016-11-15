@@ -21,15 +21,15 @@ import java.util.Map;
  */
 public class CatelogCatcher {
 
-    public static final String FIRST_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/fistCatelog.xls";
+    public static final String FIRST_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/fistCatelog.xls";
 
-    public static final String SECOND_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/secondCatelog.xls";
+    public static final String SECOND_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/secondCatelog.xls";
 
-    public static final String THIRD_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/thirdCatelog.xls";
+    public static final String THIRD_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/thirdCatelog.xls";
 
-    public static final String FOUR_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/fourCatelog.xls";
+    public static final String FOUR_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/fourCatelog.xls";
 
-    public static final String FIVE_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/fiveCatelog.xls";
+    public static final String FIVE_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/fiveCatelog.xls";
 
 
     public void getAllFirstCatelog(String mainUrl){
@@ -77,6 +77,7 @@ public class CatelogCatcher {
             catelogChineseName = linkTag.getChildren().elementAt(1).getFirstChild().getText();
             rowValue.get(columnName1).add(catelogEnglishName);
             rowValue.get(columnName2).add(catelogChineseName);
+            url = url.substring(0,url.lastIndexOf(".html")+".html".length());
             rowValue.get(columnName3).add(url);
         }
         writeExcel(FIRST_CATELOG_FILE_PATH,columnNames,rowValue);
@@ -169,6 +170,7 @@ public class CatelogCatcher {
                 }else{
                     isEnd = Boolean.FALSE;
                 }
+                urlSecond = urlSecond.substring(0,urlSecond.lastIndexOf(".html")+".html".length());
                 rowValue.get(columnName1).add(catelogEnglishNameSecond);
                 rowValue.get(columnName2).add(catelogChineseNameSecond);
                 rowValue.get(columnName3).add(urlSecond);
@@ -268,6 +270,7 @@ public class CatelogCatcher {
                         catelogChineseNameThird = linkTagThird.getLinkText();
                         urlThird = linkTagThird.getLink();
                         catelogEnglishNameThird = urlThird.substring(urlThird.lastIndexOf("/") + 1, urlThird.indexOf(".html"));
+                        urlThird = urlThird.substring(0,urlThird.lastIndexOf(".html")+".html".length());
                         rowValue.get(columnName1).add(catelogEnglishNameThird);
                         rowValue.get(columnName2).add(catelogChineseNameThird);
                         rowValue.get(columnName3).add(urlThird);
@@ -283,6 +286,7 @@ public class CatelogCatcher {
         List<String> list = readExcel(file,urlColumnIndex);
         Map<String,List<String>> resultMap = new HashMap<String, List<String>>();
         Parser parser = null;
+        List<String> columnNames = null;
         if(list == null || list.size()<1){
             System.out.println("没有读取到导航文件链接地址");
             return;
@@ -309,20 +313,22 @@ public class CatelogCatcher {
                 tempList.addAll(getAllProductByPageUrl(htmlCacher,new Parser(nextPageUrl)));
                 nextPageUrl = getNextPageUrl(htmlCacher,new Parser(nextPageUrl));
             }
-            if(StringUtils.isNotEmpty(nextPageUrl)){
+            if(StringUtils.isNotEmpty(nextPageUrl)&&htmlCacher.isEndPage(nextPageUrl)){
                 count ++;
                 tempList.addAll(getAllProductByPageUrl(htmlCacher,new Parser(nextPageUrl)));
             }
             System.out.println("到达最后一页,"+listName.get(i)+"共"+count+"页，产品数："+tempList.size());
             resultMap.put(listName.get(i),tempList);
+            nextPageUrl = null;
         }
         System.out.println("产品关系记录共："+resultMap.size());
-        list.add("导航菜单名称");
-        list.add("产品ID");
+        columnNames = new ArrayList<String>();
+        columnNames.add("导航菜单名称");
+        columnNames.add("产品ID");
         if(isEndCatelogFile){
-            writeExcel(FIVE_CATELOG_FILE_PATH,list,resultMap);
+            writeExcel(FIVE_CATELOG_FILE_PATH,columnNames,resultMap);
         }else{
-            writeExcel(FOUR_CATELOG_FILE_PATH,list,resultMap);
+            writeExcel(FOUR_CATELOG_FILE_PATH,columnNames,resultMap);
         }
     }
 
@@ -380,13 +386,34 @@ public class CatelogCatcher {
         while (simpleNodeIteratorKey.hasMoreNodes()){
             nodeKey = (LinkTag)simpleNodeIteratorKey.nextNode();
             urlKey = nodeKey.getLink();
-            urlKey = urlKey.substring(0,urlKey.lastIndexOf("/"));
+            //urlKey = urlKey.substring(0,urlKey.lastIndexOf("/"));
             resultList.add(urlKey.substring(urlKey.lastIndexOf("/")+1,urlKey.indexOf(".html")));
         }
         return resultList;
     }
 
+
+
     private void writeExcel(String filePath,List<String> columnNames,Map<String,List<String>> rowValue){
+        ExcelHandller excelHandller = new ExcelHandller();
+        File file = new File(filePath);
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        OutputStream os = null;
+        try {
+            os = new FileOutputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        excelHandller.writeExcel(os,columnNames,rowValue);
+    }
+
+
+
+    private void writeExcelFour(String filePath,List<String> columnNames,Map<String,List<String>> rowValue){
         ExcelHandller excelHandller = new ExcelHandller();
         File file = new File(filePath);
         try {

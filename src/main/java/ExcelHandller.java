@@ -76,4 +76,42 @@ public class ExcelHandller {
             e.printStackTrace();
         }
     }
+
+    public void writeExcelByMap(OutputStream os
+            , List<String> nameList, Map<String, List<String>> valueMap)
+    {
+        WritableWorkbook wwb = null;
+        WritableSheet ws = null;
+        try
+        {
+            wwb = Workbook.createWorkbook(os);
+            ws = wwb.createSheet("sheet",0);
+            Label label = null;
+            Label label2 = null;
+            Iterator iterator = null;
+            for(int i=0;i<nameList.size();i++){
+                label =  new Label(i,0,nameList.get(i));
+                ws.addCell(label);
+            }
+            iterator = valueMap.keySet().iterator();
+            String key = null;
+            List<String> tempList = null;
+            while (iterator.hasNext()){
+                key = (String)iterator.next();
+                tempList = valueMap.get(key);
+                  for(int j = 0;j<tempList.size();j++){
+                      label = new Label(0,j,key);
+                      label2 = new Label(1,j,tempList.get(j));
+                      ws.addCell(label);
+                      ws.addCell(label2);
+                 }
+            }
+            wwb.write();
+            wwb.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
 }
