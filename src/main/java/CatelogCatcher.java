@@ -286,7 +286,6 @@ public class CatelogCatcher {
         List<String> list = readExcel(file,urlColumnIndex);
         Map<String,List<String>> resultMap = new HashMap<String, List<String>>();
         Parser parser = null;
-        List<String> columnNames = null;
         if(list == null || list.size()<1){
             System.out.println("没有读取到导航文件链接地址");
             return;
@@ -307,6 +306,9 @@ public class CatelogCatcher {
             }
             parser = new Parser(list.get(i));
             tempList = (getAllProductByPageUrl(htmlCacher,parser));
+            if(tempList==null||tempList.size()<1){
+                continue;
+            }
             nextPageUrl = getNextPageUrl(htmlCacher,new Parser(list.get(i)));
             while (!htmlCacher.isEndPage(nextPageUrl)){
                 count ++;
@@ -322,13 +324,10 @@ public class CatelogCatcher {
             nextPageUrl = null;
         }
         System.out.println("产品关系记录共："+resultMap.size());
-        columnNames = new ArrayList<String>();
-        columnNames.add("导航菜单名称");
-        columnNames.add("产品ID");
         if(isEndCatelogFile){
-            writeExcel(FIVE_CATELOG_FILE_PATH,columnNames,resultMap);
+            writeExcelFour(FIVE_CATELOG_FILE_PATH,resultMap);
         }else{
-            writeExcel(FOUR_CATELOG_FILE_PATH,columnNames,resultMap);
+            writeExcelFour(FOUR_CATELOG_FILE_PATH,resultMap);
         }
     }
 
@@ -413,7 +412,7 @@ public class CatelogCatcher {
 
 
 
-    private void writeExcelFour(String filePath,List<String> columnNames,Map<String,List<String>> rowValue){
+    private void writeExcelFour(String filePath,Map<String,List<String>> rowValue){
         ExcelHandller excelHandller = new ExcelHandller();
         File file = new File(filePath);
         try {
@@ -427,6 +426,6 @@ public class CatelogCatcher {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        excelHandller.writeExcel(os,columnNames,rowValue);
+        excelHandller.writeExcelByMap(os,rowValue);
     }
 }

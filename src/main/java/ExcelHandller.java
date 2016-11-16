@@ -77,8 +77,7 @@ public class ExcelHandller {
         }
     }
 
-    public void writeExcelByMap(OutputStream os
-            , List<String> nameList, Map<String, List<String>> valueMap)
+    public void writeExcelByMap(OutputStream os,Map<String, List<String>> valueMap)
     {
         WritableWorkbook wwb = null;
         WritableSheet ws = null;
@@ -89,23 +88,24 @@ public class ExcelHandller {
             Label label = null;
             Label label2 = null;
             Iterator iterator = null;
-            for(int i=0;i<nameList.size();i++){
-                label =  new Label(i,0,nameList.get(i));
-                ws.addCell(label);
-            }
             iterator = valueMap.keySet().iterator();
+            System.out.println("收到写入数据:"+valueMap.keySet().size());
             String key = null;
             List<String> tempList = null;
+            int count = 0;
             while (iterator.hasNext()){
                 key = (String)iterator.next();
                 tempList = valueMap.get(key);
-                  for(int j = 0;j<tempList.size();j++){
-                      label = new Label(0,j,key);
-                      label2 = new Label(1,j,tempList.get(j));
+                for(int j = 0;j<tempList.size();j++){
+                      label = new Label(0,count,key);
+                      label2 = new Label(1,count,tempList.get(j));
                       ws.addCell(label);
                       ws.addCell(label2);
+                    count++;
                  }
+                System.out.println("写入key:"+key+"数量:"+tempList.size());
             }
+            System.out.println("总条数："+count);
             wwb.write();
             wwb.close();
         }

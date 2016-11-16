@@ -47,8 +47,9 @@ public class ProductCacher {
         Parser parserProduct = null;
         NodeList productNodeList = null;
         LinkTag productLinkTag = null;
-        List<String> tempList = new ArrayList<String>();
+        List<String> tempList = null;
         Map<String,List<String>> resultMap = new HashMap<String,List<String>>();
+        int count = 0;
         while (simpleNodeIterator.hasMoreNodes()){
             linkTag = (LinkTag)simpleNodeIterator.nextNode();
             brandUrl = linkTag.getLink();
@@ -59,6 +60,7 @@ public class ProductCacher {
                 System.out.println("没有找到产品列表数据");
                 continue;
             }
+            tempList = new ArrayList<String>();
             productNodeIterator = productNodeList.elements();
             while (productNodeIterator.hasMoreNodes()){
                 productLinkTag = (LinkTag) productNodeIterator.nextNode();
@@ -85,9 +87,8 @@ public class ProductCacher {
             }
             resultMap.put(brandName,tempList);
             System.out.println("品牌："+brandName+"共有"+tempList.size()+"个产品");
-            tempList.clear();
         }
-        writeExcel(DETAIL_URL_FILE_PATH,columnName,resultMap);
+        writeExcel(DETAIL_URL_FILE_PATH,resultMap);
 
     }
 
@@ -109,7 +110,7 @@ public class ProductCacher {
         return null;
     }
 
-    private void writeExcel(String filePath,List<String> columnNames,Map<String,List<String>> rowValue){
+    private void writeExcel(String filePath,Map<String,List<String>> rowValue){
         ExcelHandller excelHandller = new ExcelHandller();
         File file = new File(filePath);
         try {
@@ -123,6 +124,6 @@ public class ProductCacher {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        excelHandller.writeExcel(os,columnNames,rowValue);
+        excelHandller.writeExcelByMap(os,rowValue);
     }
 }
