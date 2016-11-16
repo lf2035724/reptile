@@ -3,11 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="285124de-e4c9-4b34-b46a-4eeba20d8b5d" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/CatelogCatcher.java" afterPath="$PROJECT_DIR$/src/main/java/CatelogCatcher.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/ExcelHandller.java" afterPath="$PROJECT_DIR$/src/main/java/ExcelHandller.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/ProductCacher.java" afterPath="$PROJECT_DIR$/src/main/java/ProductCacher.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/TestCateLoge.java" afterPath="$PROJECT_DIR$/src/main/java/TestCateLoge.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/TestProductCatcher.java" afterPath="$PROJECT_DIR$/src/main/java/TestProductCatcher.java" />
     </list>
     <ignored path="reptile.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -30,11 +26,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="CatelogCatcher.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="CatelogCatcher.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/CatelogCatcher.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="123">
-              <caret line="287" column="29" selection-start-line="287" selection-start-column="29" selection-end-line="287" selection-end-column="29" />
+            <state relative-caret-position="33">
+              <caret line="284" column="24" selection-start-line="284" selection-start-column="0" selection-end-line="285" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#1856#1864#0" expanded="true" />
@@ -62,14 +58,18 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ProductCacher.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="ProductCacher.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/ProductCacher.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-487">
-              <caret line="54" column="41" selection-start-line="54" selection-start-column="41" selection-end-line="54" selection-end-column="41" />
+            <state relative-caret-position="190">
+              <caret line="90" column="51" selection-start-line="90" selection-start-column="51" selection-end-line="90" selection-end-column="51" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#795#803#0" expanded="true" />
+                <element signature="e#3944#3945#0" expanded="true" />
+                <element signature="e#3971#3972#0" expanded="true" />
+                <element signature="e#4080#4081#0" expanded="true" />
+                <element signature="e#4107#4108#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -166,8 +166,8 @@
         <option value="$PROJECT_DIR$/src/main/java/TestCateLoge.java" />
         <option value="$PROJECT_DIR$/src/main/java/ExcelHandller.java" />
         <option value="$PROJECT_DIR$/src/main/java/CatelogCatcher.java" />
-        <option value="$PROJECT_DIR$/src/main/java/ProductCacher.java" />
         <option value="$PROJECT_DIR$/src/main/java/TestProductCatcher.java" />
+        <option value="$PROJECT_DIR$/src/main/java/ProductCacher.java" />
       </list>
     </option>
   </component>
@@ -792,7 +792,7 @@
       <workItem from="1478938069639" duration="18691000" />
       <workItem from="1479001120932" duration="33272000" />
       <workItem from="1479125392905" duration="10229000" />
-      <workItem from="1479173851719" duration="68788000" />
+      <workItem from="1479173851719" duration="70400000" />
     </task>
     <task id="LOCAL-00001" summary="11.11">
       <created>1478796576158</created>
@@ -822,11 +822,18 @@
       <option name="project" value="LOCAL" />
       <updated>1479211771420</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Merge branch 'master' of https://github.com/lf2035724/reptile&#10;&#10;# Conflicts:&#10;#&#9;.idea/modules.xml&#10;#&#9;pom.xml&#10;#&#9;reptile.iml&#10;">
+      <created>1479288792219</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1479288792219</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="143173000" />
+    <option name="totallyTimeSpent" value="144785000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1329,17 +1336,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/ProductCacher.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-487">
-          <caret line="54" column="41" selection-start-line="54" selection-start-column="41" selection-end-line="54" selection-end-column="41" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#795#803#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/ProductEntity.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
@@ -1358,8 +1354,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/CatelogCatcher.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="123">
-          <caret line="287" column="29" selection-start-line="287" selection-start-column="29" selection-end-line="287" selection-end-column="29" />
+        <state relative-caret-position="33">
+          <caret line="284" column="24" selection-start-line="284" selection-start-column="0" selection-end-line="285" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#1856#1864#0" expanded="true" />
@@ -1382,6 +1378,21 @@
             <element signature="e#9208#9230#0" expanded="true" />
             <element signature="e#13154#13176#0" expanded="true" />
             <element signature="e#16484#16492#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/ProductCacher.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="190">
+          <caret line="90" column="51" selection-start-line="90" selection-start-column="51" selection-end-line="90" selection-end-column="51" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#795#803#0" expanded="true" />
+            <element signature="e#3944#3945#0" expanded="true" />
+            <element signature="e#3971#3972#0" expanded="true" />
+            <element signature="e#4080#4081#0" expanded="true" />
+            <element signature="e#4107#4108#0" expanded="true" />
           </folding>
         </state>
       </provider>

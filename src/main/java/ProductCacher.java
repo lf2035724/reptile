@@ -92,6 +92,22 @@ public class ProductCacher {
 
     }
 
+    public ProductEntity readProductInfo(){
+        return null;
+    }
+
+    public void addToCar(){
+
+    }
+
+    public void removeFromCar(){
+
+    }
+
+    public String getWeight(){
+        return null;
+    }
+
     public String getNextPageUrl(HTMLCacher htmlCacher ,Parser parser) throws Exception {
         NodeList nodeList = null;
         SimpleNodeIterator simpleNodeIterator = null;
