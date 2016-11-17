@@ -1,9 +1,11 @@
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -17,6 +19,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.impl.cookie.BestMatchSpecFactory;
 import org.apache.http.impl.cookie.BrowserCompatSpecFactory;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
@@ -44,6 +48,8 @@ public class ProductCacher {
 
     public static  final  String TO_DELETE_STRING = "delete\\/id\\/";
 
+    public static final String TO_DELETE_STRING_POSTFIX = "\\/uenc\\/,";
+
     public static final String PREFIX_DELTE_CAR = "http://cn.pharmacyonline.com.au/cart/item/delete/id/";
 
     public static final String POSTFIX_DELETE_CAR = "/uenc/";
@@ -51,6 +57,8 @@ public class ProductCacher {
     public static final String CAR_URL = "http://cn.pharmacyonline.com.au/checkout/cart/";
 
     public static  final  String WEIGHT_ID_TAG = "total_weight";
+
+    public static final  String PRODUCT_INFO_URL = "http://cn.pharmacyonline.com.au/cart/item/getInfo";
 
     public static HttpClientContext httpClientContext= null;
 
@@ -132,7 +140,7 @@ public class ProductCacher {
         return null;
     }
 
-    public String addToCar(String productId) throws Exception {
+    public String getWeight(String productId) throws Exception {
         if(productId == null){
             System.out.println("产品ID不能为空");
             return null;
@@ -140,17 +148,19 @@ public class ProductCacher {
         if(productId.length()==7){
             productId.substring(1,productId.length());
         }
+        String weight = null;
         String deleteId = null;
         HTMLCacher htmlCacher = new HTMLCacher();
         String url = PREFIX_ADD_CAR+productId;
-        System.out.println(url);
+        //System.out.println(url);
         BufferedReader in = null;
         String content = null;
         CloseableHttpClient client = null;
-        HttpPost request = new HttpPost();
+        Map<String, String> paramMap = new HashMap<String, String>();
+        paramMap.put("qty","1");
+        HttpPost request = postForm(url,paramMap);
         try {
             client = HttpClients.createDefault();
-            request.setURI(new URI(CAR_URL));
             HttpResponse response = client.execute(request);
             setCookieStore(response);
             setContext();
@@ -173,23 +183,23 @@ public class ProductCacher {
                 }
             }
         }
-        System.out.println(content);
         int deleteIndex ;
         if(content!=null){
             deleteIndex = content.indexOf(TO_DELETE_STRING);
-            System.out.println(deleteIndex);
+            deleteId = content.substring(deleteIndex + TO_DELETE_STRING.length(), content.indexOf(TO_DELETE_STRING_POSTFIX));
+         //   System.out.println(deleteId);
         }else {
             System.out.println("没有找到删除ID");
             return null;
         }
-        if(deleteIndex > 0){
-            deleteId = content.substring(deleteIndex+TO_DELETE_STRING.length()+7,content.length());
-        }
+        paramMap = new HashMap<String, String>();
+        paramMap.put("ShippingMethod","tablerate");
+        HttpPost requestGetInfo = postForm(PRODUCT_INFO_URL,paramMap);
         try {
-            request.setURI(new URI(CAR_URL));
-            HttpResponse response = client.execute(request, httpClientContext);
-            //setCookieStore(response);
-            //setContext();
+            client = HttpClients.createDefault();
+            HttpResponse response = client.execute(requestGetInfo,httpClientContext);
+            setCookieStore(response);
+            setContext();
             in = new BufferedReader(new InputStreamReader(response.getEntity()
                     .getContent(), "utf-8"));
             StringBuffer sb = new StringBuffer("");
@@ -210,12 +220,40 @@ public class ProductCacher {
             }
         }
        // System.out.println(content);
-        System.out.println(httpClientContext.getCookieStore().getCookies());
-        if (content!=null){
-            System.out.println(content.indexOf(WEIGHT_ID_TAG));
+        if(content.indexOf("\"WeightTotal\":")>0){
+            content = content.substring(content.indexOf("\"WeightTotal\":")
+                    +"\"WeightTotal\":".length(),content.indexOf("\"ItemSubtotal\"")-1);
         }
-
-        return null;
+        weight = content;
+        System.out.println("商品重量："+ weight);
+        //System.out.println(PREFIX_DELTE_CAR+deleteId);
+        HttpGet httpGet = new HttpGet(PREFIX_DELTE_CAR+deleteId);
+       // System.out.println(PREFIX_DELTE_CAR+deleteId);
+        try {
+            HttpResponse response = client.execute(httpGet, httpClientContext);
+            setCookieStore(response);
+            setContext();
+            in = new BufferedReader(new InputStreamReader(response.getEntity()
+                    .getContent(), "utf-8"));
+            StringBuffer sb = new StringBuffer("");
+            String line = "";
+            String NL = System.getProperty("line.separator");
+            while ((line = in.readLine()) != null) {
+                sb.append(line + NL);
+            }
+            in.close();
+            content = sb.toString();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();// 最后要关闭BufferedReader
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        //System.out.println(content);
+        return weight;
     }
 
     public boolean removeFromCar(String deleteString) throws Exception {
@@ -300,14 +338,16 @@ public class ProductCacher {
         BasicClientCookie cookie = null;
         for(int i=0;i<header.length;i++){
             for(int j=0;j<header[i].getElements().length;j++){
-                cookie = new BasicClientCookie(header[i].getElements()[j].getName(),
-                        header[i].getElements()[j].getValue());
-                cookie.setDomain(".cn.pharmacyonline.com.au");
-                cookie.setPath("/");
+                if(j%2==0){
+                    cookie = new BasicClientCookie(header[i].getElements()[j].getName(),
+                            header[i].getElements()[j].getValue());
+                    cookie.setDomain("cn.pharmacyonline.com.au");
+                    cookie.setPath("/");
                     System.out.println(header[i].getElements()[j].getName());
                     System.out.println(header[i].getElements()[j].getValue());
+                    cookieStore.addCookie(cookie);
+                }
 
-                cookieStore.addCookie(cookie);
             }
         }
 
@@ -327,5 +367,24 @@ public class ProductCacher {
         // cookie.setAttribute(ClientCookie.PORT_ATTR, "8080");
         // cookie.setAttribute(ClientCookie.PATH_ATTR, "/CwlProWeb");
         //cookieStore.addCookie(cookie);
+    }
+
+    private static HttpPost postForm(String url, Map<String, String> params){
+
+        HttpPost httpost = new HttpPost(url);
+        List<NameValuePair> nvps = new ArrayList <NameValuePair>();
+
+        Set<String> keySet = params.keySet();
+        for(String key : keySet) {
+            nvps.add(new BasicNameValuePair(key, params.get(key)));
+        }
+
+        try {
+            httpost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return httpost;
     }
 }
