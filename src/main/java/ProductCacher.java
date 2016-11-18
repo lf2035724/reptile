@@ -1,3 +1,4 @@
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
@@ -136,7 +137,67 @@ public class ProductCacher {
 
     }
 
-    public ProductEntity readProductInfo(String detailUrl){
+    public ProductEntity readProductInfo(String detailUrl) throws Exception {
+        if(detailUrl == null){
+            System.out.println("产品详情url为空");
+            return null;
+        }
+        NodeList nodeList = null;
+        HTMLCacher htmlCacher = new HTMLCacher();
+        Parser parser = new Parser(detailUrl);
+        nodeList = htmlCacher.getNodeList(parser,"div","class","product-name");
+        if (nodeList == null || nodeList.size()<1) {
+            System.out.println("没有找到产品名称");
+            return null;
+        }
+        String PriceNow = null;
+        String PriceWas = null;
+        String PriceSingle = null;
+        ProductEntity productEntity = new ProductEntity();
+        TagNameFilter tagNameFilter = new TagNameFilter("h1");
+        nodeList = nodeList.extractAllNodesThatMatch(tagNameFilter,true);
+        productEntity.setProductChineseName(getInfoByNodeList(nodeList));
+        parser = new Parser(detailUrl);
+        nodeList =  htmlCacher.getNodeList(parser,"div","class","PriceNow");
+        PriceNow = getInfoByNodeList(nodeList);
+        if(PriceNow!=null){
+            PriceNow = PriceNow.substring(PriceNow.indexOf("AU$")+"AU$".length());
+            PriceNow = StringUtils.strip(PriceNow);
+        }
+        productEntity.setNowAmount(PriceNow);
+        parser = new Parser(detailUrl);
+        nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
+        AndFilter andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "DetailNoDis PriceNow last_price_sing")
+        );
+        nodeList = nodeList.extractAllNodesThatMatch(andFilter,false);
+        nodeList = nodeList.extractAllNodesThatMatch( new TagNameFilter("span"),false);
+        PriceWas = getInfoByNodeList(nodeList);
+        if(PriceWas!=null){
+            PriceWas = PriceWas.substring(PriceWas.indexOf("AU$")+"AU$".length());
+            PriceWas = StringUtils.strip(PriceWas);
+        }
+        productEntity.setOriginAmount(PriceWas);
+        if(PriceNow==null&&PriceWas==null){
+            parser = new Parser(detailUrl);
+            nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailNoDis PriceNow last_price_sing");
+            nodeList = nodeList.extractAllNodesThatMatch(new TagNameFilter("span"), true);
+            PriceSingle = getInfoByNodeList(nodeList);
+            if(PriceSingle!=null){
+                PriceSingle = PriceSingle.substring(PriceSingle.indexOf("AU$")+"AU$".length());
+                PriceSingle = StringUtils.strip(PriceSingle);
+            }
+            productEntity.setOriginAmount(PriceSingle);
+            if (PriceSingle== null){
+                System.out.println("警告，没有找到价格！！！");
+            }
+        }
+        productEntity.setProductId(detailUrl.substring(detailUrl.indexOf(".html")-7,detailUrl.indexOf(".html")));
+        productEntity.setWeight(getWeight(productEntity.getProductId().substring(1,productEntity.getProductId().length())));
+        parser = new Parser(detailUrl);
+        nodeList =  htmlCacher.getNodeList(parser,"div","class","box-collateral box-description");
+        System.out.println(productEntity);
         return null;
     }
 
@@ -256,22 +317,6 @@ public class ProductCacher {
         return weight;
     }
 
-    public boolean removeFromCar(String deleteString) throws Exception {
-        if(deleteString == null){
-            System.out.println("deleteString为空");
-            return false;
-        }
-        HTMLCacher htmlCacher = new HTMLCacher();
-        String content = null;
-        content = htmlCacher.getHTMLContent(PREFIX_DELTE_CAR+deleteString+POSTFIX_DELETE_CAR);
-        System.out.println(content);
-        if(content != null && content.indexOf("success")>0){
-            return true;
-        }else {
-            return false;
-        }
-    }
-
     public String getWeight() throws Exception {
         HTMLCacher htmlCacher = new HTMLCacher();
         NodeList nodeList = htmlCacher.getNodeList(CAR_URL,"span","id","WEIGHT_ID_TAG");
@@ -386,5 +431,14 @@ public class ProductCacher {
         }
 
         return httpost;
+    }
+
+    public String getInfoByNodeList(NodeList nodeList){
+        if(nodeList == null || nodeList.size()<1){
+            System.out.println("根据nodelist获得信息时nodelist为空");
+            return null;
+        }
+        TagNode tagNode = (TagNode)nodeList.elementAt(0);
+        return tagNode.toPlainTextString();
     }
 }

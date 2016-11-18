@@ -45,11 +45,11 @@ public class ProductEntity {
         this.productingArea = productingArea;
     }
 
-    public int getWeight() {
+    public String getWeight() {
         return weight;
     }
 
-    public void setWeight(int weight) {
+    public void setWeight(String weight) {
         this.weight = weight;
     }
 
@@ -149,7 +149,7 @@ public class ProductEntity {
     //产地
     private String productingArea;
     //商品重量
-    private int weight;
+    private String weight;
     private String originAmount;
     private String nowAmount;
     //功效
@@ -187,5 +187,30 @@ public class ProductEntity {
 
     public void setProductUrl(String productUrl) {
         this.productUrl = productUrl;
+    }
+
+    @Override
+    public String toString() {
+        return "ProductEntity{" +
+                "productId='" + productId + '\'' +
+                ", productEnglishName='" + productEnglishName + '\'' +
+                ", productShortEnglishName='" + productShortEnglishName + '\'' +
+                ", productChineseName='" + productChineseName + '\'' +
+                ", productShortChineseName='" + productShortChineseName + '\'' +
+                ", productingArea='" + productingArea + '\'' +
+                ", weight='" + weight + '\'' +
+                ", originAmount='" + originAmount + '\'' +
+                ", nowAmount='" + nowAmount + '\'' +
+                ", function='" + function + '\'' +
+                ", unitContent='" + unitContent + '\'' +
+                ", productDescribe='" + productDescribe + '\'' +
+                ", characteristic='" + characteristic + '\'' +
+                ", functionDescripe='" + functionDescripe + '\'' +
+                ", mainContent='" + mainContent + '\'' +
+                ", intendedFor='" + intendedFor + '\'' +
+                ", usageMethod='" + usageMethod + '\'' +
+                ", attention='" + attention + '\'' +
+                ", productUrl='" + productUrl + '\'' +
+                '}';
     }
 }
