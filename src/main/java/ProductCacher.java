@@ -165,7 +165,12 @@ public class ProductCacher {
         nodeList = nodeList.extractAllNodesThatMatch(tagNameFilter,true);
         productEntity.setProductChineseName(getInfoByNodeList(nodeList));
         parser = new Parser(detailUrl);
-        nodeList =  htmlCacher.getNodeList(parser,"div","class","PriceNow");
+        nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
+        AndFilter andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "PriceNow")
+        );
+        nodeList = nodeList.extractAllNodesThatMatch(andFilter,true);
         PriceNow = getInfoByNodeList(nodeList);
         if(PriceNow!=null){
             PriceNow = PriceNow.substring(PriceNow.indexOf("AU$")+"AU$".length());
@@ -174,12 +179,11 @@ public class ProductCacher {
         productEntity.setNowAmount(PriceNow);
         parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
-        AndFilter andFilter = new AndFilter(
-                new TagNameFilter("div"),
-                new HasAttributeFilter("class", "DetailNoDis PriceNow last_price_sing")
+        andFilter = new AndFilter(
+                new TagNameFilter("p"),
+                new HasAttributeFilter("class", "PriceWas")
         );
-        nodeList = nodeList.extractAllNodesThatMatch(andFilter,false);
-        nodeList = nodeList.extractAllNodesThatMatch( new TagNameFilter("span"),false);
+        nodeList = nodeList.extractAllNodesThatMatch(andFilter,true);
         PriceWas = getInfoByNodeList(nodeList);
         if(PriceWas!=null){
             PriceWas = PriceWas.substring(PriceWas.indexOf("AU$")+"AU$".length());
@@ -196,6 +200,7 @@ public class ProductCacher {
                 PriceSingle = StringUtils.strip(PriceSingle);
             }
             productEntity.setOriginAmount(PriceSingle);
+            productEntity.setNowAmount(PriceSingle);
             if (PriceSingle== null){
                 System.out.println("警告，没有找到价格！！！");
             }
@@ -243,19 +248,17 @@ public class ProductCacher {
                             Pattern pattern = Pattern.compile(parten);
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("品牌：")+"品牌：".length());
                             Matcher matcher = pattern.matcher(temp);
-                            System.out.println(temp);
-                            System.out.println(matcher.matches());
-                            System.out.println(temp.matches(parten));
-                            if(matcher.matches()){
+                            if(matcher.find()){
                                 temp = temp.replaceAll(parten2,"");
+                                temp = temp.replaceAll("/","");
                                 productEntity.setBrandChineseName(StringUtils.trim(temp));
                                 System.out.println(StringUtils.trim(temp));
-                            }else{
-                                if(!StringUtils.isEmpty(productEntity.getProductChineseName())){
-                                    productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" "));
-                                    System.out.println(productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" ")));
-                                }
                             }
+                            if(!StringUtils.isEmpty(productEntity.getProductChineseName())){
+                                System.out.println(productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" ")));
+                                productEntity.setBrandEnglishName(productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" ")));
+                            }
+
                         }
                         if(node3.toPlainTextString().indexOf("产地：") >= 0){
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("产地：")+"产地：".length());
@@ -263,22 +266,100 @@ public class ProductCacher {
                             System.out.println(StringUtils.trim(temp));
                         }
                     }
+                    if(node2.toPlainTextString().indexOf("产品特点：") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append(",");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setCharacteristic(sb.toString());
+                        System.out.println(sb.toString());
+                    }
+                    if(node2.toPlainTextString().indexOf("功能概述：") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append(",");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setFunctionDescripe(sb.toString());
+                        System.out.println(sb.toString());
+                    }
+                    if(node2.toPlainTextString().indexOf("主要成份：") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append(",");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setMainContent(sb.toString());
+                        System.out.println(sb.toString());
+                    }
+                    if(node2.toPlainTextString().indexOf("适用人群：") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append(",");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setIntendedFor(sb.toString());
+                        System.out.println(sb.toString());
+                    }
+                    if(node2.toPlainTextString().indexOf("使用方法：") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append(",");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setUsageMethod(sb.toString());
+                        System.out.println(sb.toString());
+                    }
+                    if(node2.toPlainTextString().indexOf("注意事项：") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append(",");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setAttention(sb.toString());
+                        System.out.println(sb.toString());
+                    }
                     index ++;
                     continue;
                 }else{
                     continue;
                 }
             }
-
-//            if("div".equals(node.get)){
-//                index = 0;
-//                System.out.println(node.getText());
-//            }
-//            if("p".equals(node.getTagName())){
-//                System.out.println(node.getText());
-//            }
         }
-        System.out.println(productEntity);
+        parser = new Parser(detailUrl);
+        nodeList = htmlCacher.getNodeList(parser, "div", "class", "product-extend-specification product-extend");
+        if(nodeList!=null&&nodeList.size()>0){
+            nodeList = nodeList.extractAllNodesThatMatch(new TagNameFilter("td"), true);
+        }
+        int index2 = 0;
+        if(nodeList!=null&&nodeList.size()>0){
+            iterator = nodeList.elements();
+            while (iterator.hasMoreNodes()){
+                TagNode node4= (TagNode)iterator.nextNode();
+                if(index2 == 1){
+                    System.out.println(node4.toPlainTextString());
+                    productEntity.setProductEnglishName(node4.toPlainTextString());
+                    index2++;
+                }
+                if(node4.toPlainTextString().indexOf("英文名称") >= 0){
+                    index2=1;
+                }
+            }
+        }
+            System.out.println(productEntity);
         return null;
     }
 
@@ -412,6 +493,21 @@ public class ProductCacher {
             System.out.println(node.toPlainTextString());
         }
         return node.toPlainTextString();
+    }
+
+    public String replaceTag(String oriString){
+        if(StringUtils.isEmpty(oriString)){
+            System.out.println("要替换的源字符串为空！");
+            return null;
+        }
+        if(oriString.indexOf("○") >= 0){
+            oriString = oriString.replaceAll("○","");
+        }
+        if(oriString.indexOf("　") >= 0){
+            oriString = oriString.replaceAll("　","");
+        }
+
+        return StringUtils.trim(oriString);
     }
 
     public static void setContext() {
