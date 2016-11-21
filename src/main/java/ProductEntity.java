@@ -5,6 +5,59 @@ public class ProductEntity {
 
     //目标网商品编号
 
+    private String productId;
+    private String productEnglishName;
+    private String productShortEnglishName;
+    private String productChineseName;
+    private String productShortChineseName;
+
+    private String brandChineseName;
+    private String brandEnglishName;
+    //产地
+    private String productingArea;
+    //商品重量
+    private String weight;
+    private String originAmount;
+    private String nowAmount;
+    //功效
+    private String function;
+    //单位含量
+    private String unitContent;
+    //产品描述
+    private String productDescribe;
+    //产品特点
+    private String characteristic;
+    //功能描述
+    private String functionDescripe;
+    //主要成分
+    private String mainContent;
+    //适用人群
+    private String intendedFor;
+    //使用方法
+    private String usageMethod;
+    //注意事项
+    private String attention;
+    //目标产品URL
+    private String productUrl;
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public String getProductUrl() {
+        return productUrl;
+    }
+
+    public void setProductUrl(String productUrl) {
+        this.productUrl = productUrl;
+    }
+
+
+
     public String getProductEnglishName() {
         return productEnglishName;
     }
@@ -93,6 +146,22 @@ public class ProductEntity {
         this.productDescribe = productDescribe;
     }
 
+    public String getBrandChineseName() {
+        return brandChineseName;
+    }
+
+    public void setBrandChineseName(String brandChineseName) {
+        this.brandChineseName = brandChineseName;
+    }
+
+    public String getBrandEnglishName() {
+        return brandEnglishName;
+    }
+
+    public void setBrandEnglishName(String brandEnglishName) {
+        this.brandEnglishName = brandEnglishName;
+    }
+
     public String getCharacteristic() {
         return characteristic;
     }
@@ -141,53 +210,6 @@ public class ProductEntity {
         this.attention = attention;
     }
 
-    private String productId;
-    private String productEnglishName;
-    private String productShortEnglishName;
-    private String productChineseName;
-    private String productShortChineseName;
-    //产地
-    private String productingArea;
-    //商品重量
-    private String weight;
-    private String originAmount;
-    private String nowAmount;
-    //功效
-    private String function;
-    //单位含量
-    private String unitContent;
-    //产品描述
-    private String productDescribe;
-    //产品特点
-    private String characteristic;
-    //功能描述
-    private String functionDescripe;
-    //主要成分
-    private String mainContent;
-    //适用人群
-    private String intendedFor;
-    //使用方法
-    private String usageMethod;
-    //注意事项
-    private String attention;
-    //目标产品URL
-    private String productUrl;
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public String getProductUrl() {
-        return productUrl;
-    }
-
-    public void setProductUrl(String productUrl) {
-        this.productUrl = productUrl;
-    }
 
     @Override
     public String toString() {

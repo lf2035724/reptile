@@ -25,11 +25,14 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
+import org.htmlparser.Tag;
 import org.htmlparser.filters.AndFilter;
 import org.htmlparser.filters.HasAttributeFilter;
 import org.htmlparser.filters.TagNameFilter;
 import org.htmlparser.nodes.TagNode;
+import org.htmlparser.tags.Div;
 import org.htmlparser.tags.LinkTag;
+import org.htmlparser.tags.ParagraphTag;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
 import org.htmlparser.util.SimpleNodeIterator;
@@ -37,6 +40,8 @@ import org.htmlparser.util.SimpleNodeIterator;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by yangpy on 2016/11/14.
@@ -143,6 +148,8 @@ public class ProductCacher {
             return null;
         }
         NodeList nodeList = null;
+        NodeList nodeListSecond  = null;
+        NodeList nodeListThird  = null;
         HTMLCacher htmlCacher = new HTMLCacher();
         Parser parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser,"div","class","product-name");
@@ -197,6 +204,80 @@ public class ProductCacher {
         productEntity.setWeight(getWeight(productEntity.getProductId().substring(1,productEntity.getProductId().length())));
         parser = new Parser(detailUrl);
         nodeList =  htmlCacher.getNodeList(parser,"div","class","box-collateral box-description");
+        andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "desc-title")
+        );
+        nodeList = nodeList.extractAllNodesThatMatch(andFilter,true);
+        SimpleNodeIterator iterator = nodeList.elements();
+        int index;
+        Node node = null;
+        Node node2 = null;
+        while (iterator.hasMoreNodes()){
+            index = 0;
+            node = iterator.nextNode();
+            node2 = node;
+            while (true){
+                node = node.getNextSibling();
+                if(node == null ){
+                    break;
+                }
+                if(node instanceof Div){
+                    break;
+                }
+                if(node instanceof ParagraphTag){
+                    TagNode node3 = (TagNode) node;
+                    if(node2.toPlainTextString().indexOf("产品介绍：") >= 0){
+                        if( index == 0){
+                            productEntity.setProductDescribe(node3.toPlainTextString());
+                            System.out.println(node3.toPlainTextString());
+                        }
+                        if(node3.toPlainTextString().indexOf("规格：") >= 0){
+                            String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("规格：")+"规格：".length());
+                            productEntity.setUnitContent(StringUtils.trim(temp));
+                            System.out.println(StringUtils.trim(temp));
+                        }
+                        if(node3.toPlainTextString().indexOf("品牌：") >= 0){
+                            String parten = "[\\u4e00-\\u9fa5]+";
+                            String parten2 = "[a-z0-9A-Z]*";
+                            Pattern pattern = Pattern.compile(parten);
+                            String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("品牌：")+"品牌：".length());
+                            Matcher matcher = pattern.matcher(temp);
+                            System.out.println(temp);
+                            System.out.println(matcher.matches());
+                            System.out.println(temp.matches(parten));
+                            if(matcher.matches()){
+                                temp = temp.replaceAll(parten2,"");
+                                productEntity.setBrandChineseName(StringUtils.trim(temp));
+                                System.out.println(StringUtils.trim(temp));
+                            }else{
+                                if(!StringUtils.isEmpty(productEntity.getProductChineseName())){
+                                    productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" "));
+                                    System.out.println(productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" ")));
+                                }
+                            }
+                        }
+                        if(node3.toPlainTextString().indexOf("产地：") >= 0){
+                            String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("产地：")+"产地：".length());
+                            productEntity.setProductingArea(StringUtils.trim(temp));
+                            System.out.println(StringUtils.trim(temp));
+                        }
+                    }
+                    index ++;
+                    continue;
+                }else{
+                    continue;
+                }
+            }
+
+//            if("div".equals(node.get)){
+//                index = 0;
+//                System.out.println(node.getText());
+//            }
+//            if("p".equals(node.getTagName())){
+//                System.out.println(node.getText());
+//            }
+        }
         System.out.println(productEntity);
         return null;
     }
