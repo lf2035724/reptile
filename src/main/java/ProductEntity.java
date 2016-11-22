@@ -210,7 +210,6 @@ public class ProductEntity {
         this.attention = attention;
     }
 
-
     @Override
     public String toString() {
         return "ProductEntity{" +
@@ -219,6 +218,8 @@ public class ProductEntity {
                 ", productShortEnglishName='" + productShortEnglishName + '\'' +
                 ", productChineseName='" + productChineseName + '\'' +
                 ", productShortChineseName='" + productShortChineseName + '\'' +
+                ", brandChineseName='" + brandChineseName + '\'' +
+                ", brandEnglishName='" + brandEnglishName + '\'' +
                 ", productingArea='" + productingArea + '\'' +
                 ", weight='" + weight + '\'' +
                 ", originAmount='" + originAmount + '\'' +

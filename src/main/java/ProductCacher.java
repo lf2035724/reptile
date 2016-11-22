@@ -1,3 +1,10 @@
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+import jxl.write.Label;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
@@ -38,6 +45,7 @@ import org.htmlparser.util.ParserException;
 import org.htmlparser.util.SimpleNodeIterator;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -69,6 +77,9 @@ public class ProductCacher {
     public static HttpClientContext httpClientContext= null;
 
     public static CookieStore cookieStore = null;
+
+    public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/yangpy/Desktop/chuang/productInfo.xls";
+
 
     public void getProductDtailsUrl(String brandMainUrl) throws Exception {
         if(brandMainUrl == null){
@@ -142,11 +153,48 @@ public class ProductCacher {
 
     }
 
+    public void readAllProductInfoToExcel(File file,int urlColumnIndex) throws Exception {
+        List<String> list = readExcel(file,urlColumnIndex);
+        if(list == null || list.size()<1){
+            System.out.println("没有读取到导航文件链接地址");
+            return;
+        }
+        ProductEntity productEntity = null;
+        List<ProductEntity> resultList = new ArrayList<ProductEntity>();
+        String url = null;
+        for(int i=0;i<30;i++){
+            url = list.get(i);
+            productEntity = readProductInfo(url);
+            if(productEntity == null){
+                System.out.println("商品不存在!"+list.get(i));
+            }
+            resultList.add(productEntity);
+        }
+        writeExcel(resultList);
+    }
+
+    public List<String> readExcel(File file , int urlColumnIndex) throws IOException, BiffException {
+        List list = new ArrayList();
+        Workbook rwb = null;
+        Cell cell = null;
+        InputStream stream = new FileInputStream(file);
+        rwb = Workbook.getWorkbook(stream);
+        Sheet sheet = rwb.getSheet(0);
+        for(int i=1; i<sheet.getRows(); i++){
+            cell = sheet.getCell(urlColumnIndex,i);
+            list.add(cell.getContents());
+        }
+        System.out.println("读取到条数:"+list.size());
+        return list;
+    }
+
     public ProductEntity readProductInfo(String detailUrl) throws Exception {
         if(detailUrl == null){
             System.out.println("产品详情url为空");
             return null;
         }
+        Node node = null;
+        Node node2 = null;
         NodeList nodeList = null;
         NodeList nodeListSecond  = null;
         NodeList nodeListThird  = null;
@@ -207,6 +255,45 @@ public class ProductCacher {
         }
         productEntity.setProductId(detailUrl.substring(detailUrl.indexOf(".html")-7,detailUrl.indexOf(".html")));
         productEntity.setWeight(getWeight(productEntity.getProductId().substring(1,productEntity.getProductId().length())));
+        if(!StringUtils.isEmpty(productEntity.getProductChineseName())){
+            String parten = "[\\u4e00-\\u9fa5]+";
+            Pattern pattern = Pattern.compile(parten);
+            Matcher matcher = pattern.matcher(productEntity.getProductChineseName());
+            matcher.find();
+            productEntity.setBrandEnglishName(StringUtils.trim(productEntity.getProductChineseName().substring(0,matcher.start())));
+        }
+        parser = new Parser(detailUrl);
+        nodeList =  htmlCacher.getNodeList(parser,"div","class","std");
+        if(nodeList == null || nodeList.size()<1){
+            System.out.println("详细说明不存在！"+detailUrl);
+        }else {
+            int tempIndex = 0;
+            if(nodeList.elementAt(0).getChildren()==null||nodeList.elementAt(0).getChildren().size()==1){
+                productEntity.setProductDescribe(StringUtils.trim(nodeList.elementAt(0).toPlainTextString()));
+            }else{
+                SimpleNodeIterator iterator = nodeList.elementAt(0).getChildren().elements();
+                boolean saveFlag = false;
+                StringBuffer sb = new StringBuffer();
+                while (iterator.hasMoreNodes()){
+                    node = iterator.nextNode();
+                    if(node instanceof Div && tempIndex==0){
+                        break;
+                    }
+                    if(node instanceof Div && tempIndex!=0){
+                        break;
+                    }
+                    if(node instanceof ParagraphTag){
+                        if(sb.length()<1){
+                            sb.append(node.toPlainTextString());
+                        }else{
+                            sb.append("*" + node.toPlainTextString().replaceAll("\\*",""));
+                        }
+                    }
+                    tempIndex ++;
+                }
+                productEntity.setProductDescribe(sb.toString());
+            }
+        }
         parser = new Parser(detailUrl);
         nodeList =  htmlCacher.getNodeList(parser,"div","class","box-collateral box-description");
         andFilter = new AndFilter(
@@ -216,8 +303,6 @@ public class ProductCacher {
         nodeList = nodeList.extractAllNodesThatMatch(andFilter,true);
         SimpleNodeIterator iterator = nodeList.elements();
         int index;
-        Node node = null;
-        Node node2 = null;
         while (iterator.hasMoreNodes()){
             index = 0;
             node = iterator.nextNode();
@@ -235,12 +320,14 @@ public class ProductCacher {
                     if(node2.toPlainTextString().indexOf("产品介绍：") >= 0){
                         if( index == 0){
                             productEntity.setProductDescribe(node3.toPlainTextString());
-                            System.out.println(node3.toPlainTextString());
                         }
                         if(node3.toPlainTextString().indexOf("规格：") >= 0){
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("规格：")+"规格：".length());
                             productEntity.setUnitContent(StringUtils.trim(temp));
-                            System.out.println(StringUtils.trim(temp));
+                        }
+                        if(node3.toPlainTextString().indexOf("容量：") >= 0){
+                            String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("容量：")+"容量：".length());
+                            productEntity.setUnitContent(StringUtils.trim(temp));
                         }
                         if(node3.toPlainTextString().indexOf("品牌：") >= 0){
                             String parten = "[\\u4e00-\\u9fa5]+";
@@ -252,85 +339,94 @@ public class ProductCacher {
                                 temp = temp.replaceAll(parten2,"");
                                 temp = temp.replaceAll("/","");
                                 productEntity.setBrandChineseName(StringUtils.trim(temp));
-                                System.out.println(StringUtils.trim(temp));
                             }
-                            if(!StringUtils.isEmpty(productEntity.getProductChineseName())){
-                                System.out.println(productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" ")));
-                                productEntity.setBrandEnglishName(productEntity.getProductChineseName().substring(0,productEntity.getProductChineseName().indexOf(" ")));
-                            }
-
                         }
                         if(node3.toPlainTextString().indexOf("产地：") >= 0){
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("产地：")+"产地：".length());
                             productEntity.setProductingArea(StringUtils.trim(temp));
-                            System.out.println(StringUtils.trim(temp));
                         }
                     }
                     if(node2.toPlainTextString().indexOf("产品特点：") >= 0){
                         StringBuffer sb = new StringBuffer();
-                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
-                            sb.append(",");
+                            sb.append("*");
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setCharacteristic(sb.toString());
-                        System.out.println(sb.toString());
                     }
-                    if(node2.toPlainTextString().indexOf("功能概述：") >= 0){
+
+                    if(node2.toPlainTextString().indexOf("产品功能：") >= 0){
                         StringBuffer sb = new StringBuffer();
-                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
-                            sb.append(",");
+                            sb.append("*");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setCharacteristic(sb.toString());
+                    }
+
+                    if(node2.toPlainTextString().indexOf("功能概述：") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append("*");
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setFunctionDescripe(sb.toString());
-                        System.out.println(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("主要成份：") >= 0){
                         StringBuffer sb = new StringBuffer();
-                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
-                            sb.append(",");
+                            sb.append("*");
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setMainContent(sb.toString());
-                        System.out.println(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("适用人群：") >= 0){
                         StringBuffer sb = new StringBuffer();
-                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
-                            sb.append(",");
+                            sb.append("*");
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setIntendedFor(sb.toString());
-                        System.out.println(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("使用方法：") >= 0){
                         StringBuffer sb = new StringBuffer();
-                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
-                            sb.append(",");
+                            sb.append("*");
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setUsageMethod(sb.toString());
-                        System.out.println(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("注意事项：") >= 0){
                         StringBuffer sb = new StringBuffer();
-                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&index==0){
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
-                            sb.append(",");
+                            sb.append("*");
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setAttention(sb.toString());
-                        System.out.println(sb.toString());
+                    }
+                    if(node2.toPlainTextString().indexOf("Warnings:") >= 0){
+                        StringBuffer sb = new StringBuffer();
+                        if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
+                            sb.append("*");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setAttention(sb.toString());
                     }
                     index ++;
                     continue;
@@ -350,7 +446,6 @@ public class ProductCacher {
             while (iterator.hasMoreNodes()){
                 TagNode node4= (TagNode)iterator.nextNode();
                 if(index2 == 1){
-                    System.out.println(node4.toPlainTextString());
                     productEntity.setProductEnglishName(node4.toPlainTextString());
                     index2++;
                 }
@@ -359,8 +454,51 @@ public class ProductCacher {
                 }
             }
         }
-            System.out.println(productEntity);
-        return null;
+        System.out.println(productEntity);
+        return productEntity;
+    }
+
+    public void writeExcel(List<ProductEntity> entityList){
+        File file = new File(ALL_PRODUCT_INFO_FILE);
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        OutputStream os = null;
+        try {
+            os = new FileOutputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        WritableWorkbook wwb = null;
+        WritableSheet ws = null;
+        try
+        {
+            wwb = Workbook.createWorkbook(os);
+            ws = wwb.createSheet("sheet",0);
+            ProductEntity entity = null;
+            for(int i=0;i<entityList.size();i++){
+                entity = entityList.get(i);
+                if(entity==null){
+                    System.out.println("产品实体空！");
+                    continue;
+                }
+                Field [] fields = entity.getClass().getDeclaredFields();
+                for(int j=0;j < fields.length;j++){
+                    Field f = fields[j];
+                    f.setAccessible(true);
+                    Object val = f.get(entity);
+                    ws.addCell(new Label(j,i,String.valueOf(val)));
+                }
+            }
+            wwb.write();
+            wwb.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public String getWeight(String productId) throws Exception {
@@ -448,7 +586,6 @@ public class ProductCacher {
                     +"\"WeightTotal\":".length(),content.indexOf("\"ItemSubtotal\"")-1);
         }
         weight = content;
-        System.out.println("商品重量："+ weight);
         //System.out.println(PREFIX_DELTE_CAR+deleteId);
         HttpGet httpGet = new HttpGet(PREFIX_DELTE_CAR+deleteId);
        // System.out.println(PREFIX_DELTE_CAR+deleteId);
@@ -511,7 +648,6 @@ public class ProductCacher {
     }
 
     public static void setContext() {
-        System.out.println("----setContext");
         httpClientContext = HttpClientContext.create();
         httpClientContext.setCookieStore(cookieStore);
     }
@@ -552,7 +688,6 @@ public class ProductCacher {
     }
 
     public static void setCookieStore(HttpResponse httpResponse) {
-        System.out.println("----setCookieStore");
         cookieStore = new BasicCookieStore();
         Header [] header = null;
         header = httpResponse.getHeaders("Set-Cookie");
@@ -565,8 +700,8 @@ public class ProductCacher {
                             header[i].getElements()[j].getValue());
                     cookie.setDomain("cn.pharmacyonline.com.au");
                     cookie.setPath("/");
-                    System.out.println(header[i].getElements()[j].getName());
-                    System.out.println(header[i].getElements()[j].getValue());
+                    //System.out.println(header[i].getElements()[j].getName());
+                   //System.out.println(header[i].getElements()[j].getValue());
                     cookieStore.addCookie(cookie);
                 }
 
@@ -616,6 +751,6 @@ public class ProductCacher {
             return null;
         }
         TagNode tagNode = (TagNode)nodeList.elementAt(0);
-        return tagNode.toPlainTextString();
+        return StringUtils.trim(tagNode.toPlainTextString());
     }
 }
