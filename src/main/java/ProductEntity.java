@@ -37,8 +37,8 @@ public class ProductEntity {
     private String usageMethod;
     //注意事项
     private String attention;
-    //目标产品URL
-    private String productUrl;
+
+    private String sku;
 
     public String getProductId() {
         return productId;
@@ -47,16 +47,6 @@ public class ProductEntity {
     public void setProductId(String productId) {
         this.productId = productId;
     }
-
-    public String getProductUrl() {
-        return productUrl;
-    }
-
-    public void setProductUrl(String productUrl) {
-        this.productUrl = productUrl;
-    }
-
-
 
     public String getProductEnglishName() {
         return productEnglishName;
@@ -210,6 +200,15 @@ public class ProductEntity {
         this.attention = attention;
     }
 
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    //SKU
     @Override
     public String toString() {
         return "ProductEntity{" +
@@ -233,7 +232,7 @@ public class ProductEntity {
                 ", intendedFor='" + intendedFor + '\'' +
                 ", usageMethod='" + usageMethod + '\'' +
                 ", attention='" + attention + '\'' +
-                ", productUrl='" + productUrl + '\'' +
+                ", sku='" + sku + '\'' +
                 '}';
     }
 }

@@ -150,7 +150,7 @@ public class HTMLCacher {
             ins.close();
             fo.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new Exception("图片不存在");
         } finally {
             if (ins != null) {
                 try {
@@ -182,19 +182,24 @@ public class HTMLCacher {
         return imageSrc.substring(posStar + 1);
     }
 
-    public boolean isEndPage(String href){
+    public boolean isEndPage(String href) throws InterruptedException {
         if(StringUtils.isEmpty(href)){
             System.out.println("传入的连接地址为空！是最后一页");
             return true;
         }
         String htmlContent = null;
-        try {
-            htmlContent = getHTMLContent(href);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if(StringUtils.isEmpty(htmlContent)){
-            System.out.println("通过连接获取到html为空href:"+href);
+        for(int i=0;i<3;i++){
+            try {
+                htmlContent = getHTMLContent(href);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if(StringUtils.isEmpty(htmlContent)){
+                Thread.currentThread().wait(5000);
+                System.out.println("通过连接获取到html为空，5秒后再次尝试href:"+href);
+            }else{
+                break;
+            }
         }
        int indexOfNextPage =  htmlContent.indexOf("下一页");
         String temp = null;
@@ -212,4 +217,6 @@ public class HTMLCacher {
             return true;
         }
     }
+
+
 }

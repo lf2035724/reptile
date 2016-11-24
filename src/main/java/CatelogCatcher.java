@@ -68,7 +68,6 @@ public class CatelogCatcher {
         String url = "";
         while (simpleNodeIterator.hasMoreNodes()){
             linkTag = (LinkTag) simpleNodeIterator.nextNode();
-            System.out.println(linkTag.getLink());
             url = linkTag.getLink();
             if(url.indexOf(".html")<1){
                 continue;
@@ -78,6 +77,7 @@ public class CatelogCatcher {
             rowValue.get(columnName1).add(catelogEnglishName);
             rowValue.get(columnName2).add(catelogChineseName);
             url = url.substring(0,url.lastIndexOf(".html")+".html".length());
+            System.out.println(url);
             rowValue.get(columnName3).add(url);
         }
         writeExcel(FIRST_CATELOG_FILE_PATH,columnNames,rowValue);
@@ -154,7 +154,6 @@ public class CatelogCatcher {
             simpleNodeIteratorSecond = nodeListSecond.elements();
             while (simpleNodeIteratorSecond.hasMoreNodes()) {
                 linkTagSecond = (LinkTag) simpleNodeIteratorSecond.nextNode();
-                System.out.println(linkTagSecond.getText());
                 urlSecond = linkTagSecond.getLink();
                 catelogEnglishNameSecond = urlSecond.substring(urlSecond.lastIndexOf("/")+1,urlSecond.indexOf(".html"));
                 catelogChineseNameSecond = linkTagSecond.getLinkText();
@@ -174,6 +173,7 @@ public class CatelogCatcher {
                 rowValue.get(columnName1).add(catelogEnglishNameSecond);
                 rowValue.get(columnName2).add(catelogChineseNameSecond);
                 rowValue.get(columnName3).add(urlSecond);
+                System.out.println(urlSecond);
                 rowValue.get(columnName4).add(catelogEnglishNameFirst);
                 rowValue.get(columnName5).add(isEnd.toString());
             }
@@ -250,7 +250,6 @@ public class CatelogCatcher {
             simpleNodeIteratorSecond = nodeListSecond.elements();
             while (simpleNodeIteratorSecond.hasMoreNodes()) {
                 linkTagSecond = (LinkTag) simpleNodeIteratorSecond.nextNode();
-                System.out.println(linkTagSecond.getLinkText());
                 urlSecond = linkTagSecond.getLink();
                 catelogEnglishNameSecond = urlSecond.substring(urlSecond.lastIndexOf("/")+1,urlSecond.indexOf(".html"));
                 try {//开始抓取3级菜单
@@ -274,6 +273,7 @@ public class CatelogCatcher {
                         rowValue.get(columnName1).add(catelogEnglishNameThird);
                         rowValue.get(columnName2).add(catelogChineseNameThird);
                         rowValue.get(columnName3).add(urlThird);
+                        System.out.println(urlThird);
                         rowValue.get(columnName4).add(catelogEnglishNameSecond);
                     }
                 }

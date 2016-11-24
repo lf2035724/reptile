@@ -15,6 +15,9 @@ import java.io.OutputStream;
  * Created by li on 2016-11-1.
  */
 public class TestCacher {
+
+    public static final String ORI_IMG_PATH = "C:/Users/yangpy/Desktop/chuang/oriImg/";
+
     public static void main(String[] args) throws  Exception {
 //        HTMLCacher HtmlCacher = new HTMLCacher();
 //        String url = "http://cn.pharmacyonline.com.au/brands";
@@ -30,9 +33,9 @@ public class TestCacher {
 //        file.createNewFile();
 //        OutputStream os = new FileOutputStream(file);
 //        excelHandller.writeExcel(os,nodeListA);
-                HTMLCacher HtmlCacher = new HTMLCacher();
-//        HtmlCacher.getImage("http://7xihp5.com2.z0.glb.qiniucdn.com/media/catalog/product/8/8/887910/antipodes-juliet-skin-brightening-gel-cleanser-200ml.jpg");
-       String imageName =  HtmlCacher.getImageName("http://7xihp5.com2.z0.glb.qiniucdn.com/media/catalog/product/8/8/887910/antipodes-juliet-skin-brightening-gel-cleanser-200ml.jpg?imageMogr2/thumbnail/90x90");
-        System.out.println(imageName);
+             //   HTMLCacher HtmlCacher = new HTMLCacher();
+        //HtmlCacher.getImage("http://7xihp5.com2.z0.glb.qiniucdn.com/media/catalog/product/8/8/887910/antipodes-juliet-skin-brightening-gel-cleanser-200ml.jpg",ORI_IMG_PATH,"123.jpg");
+      // String imageName =  HtmlCacher.getImageName("http://7xihp5.com2.z0.glb.qiniucdn.com/media/catalog/product/8/8/887910/antipodes-juliet-scleanser-200ml.jpg?imageMogr2/thumbnail/90x90");
+      //  System.out.println(imageName);
     }
 }

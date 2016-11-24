@@ -38,6 +38,7 @@ import org.htmlparser.filters.HasAttributeFilter;
 import org.htmlparser.filters.TagNameFilter;
 import org.htmlparser.nodes.TagNode;
 import org.htmlparser.tags.Div;
+import org.htmlparser.tags.ImageTag;
 import org.htmlparser.tags.LinkTag;
 import org.htmlparser.tags.ParagraphTag;
 import org.htmlparser.util.NodeList;
@@ -80,6 +81,7 @@ public class ProductCacher {
 
     public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/yangpy/Desktop/chuang/productInfo.xls";
 
+    public static final String ORI_IMG_PATH = "C:/Users/yangpy/Desktop/chuang/oriImg/";
 
     public void getProductDtailsUrl(String brandMainUrl) throws Exception {
         if(brandMainUrl == null){
@@ -163,7 +165,7 @@ public class ProductCacher {
         List<ProductEntity> resultList = new ArrayList<ProductEntity>();
         String url = null;
         for(int i=0;i<30;i++){
-            url = list.get(i);
+            url = list.get(i+30);
             productEntity = readProductInfo(url);
             if(productEntity == null){
                 System.out.println("商品不存在!"+list.get(i));
@@ -212,6 +214,16 @@ public class ProductCacher {
         TagNameFilter tagNameFilter = new TagNameFilter("h1");
         nodeList = nodeList.extractAllNodesThatMatch(tagNameFilter,true);
         productEntity.setProductChineseName(getInfoByNodeList(nodeList));
+        parser = new Parser(detailUrl);
+        nodeList = htmlCacher.getNodeList(parser,"div","class","DetailSku");
+        if (nodeList == null || nodeList.size()<1) {
+            System.out.println("没有找sku");
+            return null;
+        }else{
+            String sku = nodeList.elementAt(0).toPlainTextString();
+            sku=sku.substring(sku.indexOf("SKU:")+"SKU:".length(),sku.length());
+            productEntity.setSku(sku);
+        }
         parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
         AndFilter andFilter = new AndFilter(
@@ -307,6 +319,7 @@ public class ProductCacher {
             index = 0;
             node = iterator.nextNode();
             node2 = node;
+            StringBuffer sb = new StringBuffer();
             while (true){
                 node = node.getNextSibling();
                 if(node == null ){
@@ -347,7 +360,6 @@ public class ProductCacher {
                         }
                     }
                     if(node2.toPlainTextString().indexOf("产品特点：") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -358,7 +370,6 @@ public class ProductCacher {
                     }
 
                     if(node2.toPlainTextString().indexOf("产品功能：") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -369,7 +380,6 @@ public class ProductCacher {
                     }
 
                     if(node2.toPlainTextString().indexOf("功能概述：") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -379,7 +389,6 @@ public class ProductCacher {
                         productEntity.setFunctionDescripe(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("主要成份：") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -389,7 +398,6 @@ public class ProductCacher {
                         productEntity.setMainContent(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("适用人群：") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -399,7 +407,6 @@ public class ProductCacher {
                         productEntity.setIntendedFor(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("使用方法：") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -409,7 +416,6 @@ public class ProductCacher {
                         productEntity.setUsageMethod(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("注意事项：") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -419,7 +425,6 @@ public class ProductCacher {
                         productEntity.setAttention(sb.toString());
                     }
                     if(node2.toPlainTextString().indexOf("Warnings:") >= 0){
-                        StringBuffer sb = new StringBuffer();
                         if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))&&sb.length()<2){
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }else if(!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))){
@@ -454,10 +459,49 @@ public class ProductCacher {
                 }
             }
         }
+        getOriImg(htmlCacher,detailUrl,productEntity);
         System.out.println(productEntity);
         return productEntity;
     }
 
+    public void getOriImg(HTMLCacher htmlCacher,String detailUrl,ProductEntity productEntity) throws Exception {
+        Parser parser = new Parser(detailUrl);
+        NodeList nodeList = htmlCacher.getNodeList(parser, "a", "class", "cloud-zoom");
+        ImageTag imageTag = null;
+        String imageUrl = null;
+        if(nodeList!=null&&nodeList.size()>0){
+            nodeList = nodeList.elementAt(0).getChildren();
+            SimpleNodeIterator iterator3 = nodeList.elements();
+            while (iterator3.hasMoreNodes()){
+                Node node = iterator3.nextNode();
+                if(node instanceof ImageTag){
+                    imageTag = (ImageTag)node;
+                    break;
+                }
+            }
+        }
+        if(imageTag== null){
+            System.out.println("没有原图片？"+productEntity.getSku());
+            return;
+        }
+        imageUrl = imageTag.getImageURL();
+        imageUrl = imageUrl.substring(0,imageUrl.indexOf(".jpg")+".jpg".length());
+        String tempUrl = imageUrl.substring(imageUrl.lastIndexOf("/") + 1, imageUrl.length());
+        if(tempUrl.indexOf(productEntity.getSku()) >= 0){
+            String tempUrl2 = imageUrl.substring(0,imageUrl.lastIndexOf("/")+1)+productEntity.getSku()+".jpg";
+            try {
+                htmlCacher.getImage(tempUrl2,ORI_IMG_PATH,productEntity.getSku() + ".jpg");
+            } catch (Exception e) {
+                if("图片不存在".equals(e.getMessage())){
+                    htmlCacher.getImage(imageUrl,ORI_IMG_PATH,productEntity.getSku() + ".jpg");
+                }else {
+                    e.printStackTrace();
+                }
+            }
+        }else {
+            htmlCacher.getImage(imageUrl,ORI_IMG_PATH,productEntity.getSku() + ".jpg");
+        }
+    }
     public void writeExcel(List<ProductEntity> entityList){
         File file = new File(ALL_PRODUCT_INFO_FILE);
         try {
