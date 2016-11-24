@@ -17,10 +17,10 @@ public class TestCateLoge {
        CatelogCatcher catelogCatcher = new CatelogCatcher();
         //catelogCatcher.getAllFirstCatelog(FIRST_CATELOG_URL);
         //catelogCatcher.getAllSecondCatelog(SECOND_CATELOG_URL);
-      catelogCatcher.getAllThirdCatelog(FIRST_CATELOG_URL);
+        //catelogCatcher.getAllThirdCatelog(FIRST_CATELOG_URL);
         //File file = new File(CatelogCatcher.SECOND_CATELOG_FILE_PATH);
         //catelogCatcher.getFourCatelog(file,2,0,4,false);
-        //File file = new File(CatelogCatcher.THIRD_CATELOG_FILE_PATH);
-        //catelogCatcher.getFourCatelog(file,2,0,4,true);
+        File file = new File(CatelogCatcher.THIRD_CATELOG_FILE_PATH);
+        catelogCatcher.getFourCatelog(file,2,0,4,true);
     }
 }

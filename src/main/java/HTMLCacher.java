@@ -195,7 +195,7 @@ public class HTMLCacher {
                 e.printStackTrace();
             }
             if(StringUtils.isEmpty(htmlContent)){
-                Thread.currentThread().wait(5000);
+                Thread.sleep(5000);
                 System.out.println("通过连接获取到html为空，5秒后再次尝试href:"+href);
             }else{
                 break;

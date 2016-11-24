@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
  */
 public class ProductCacher {
 
-    public static final String DETAIL_URL_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/detailUrl.xls";
+    public static final String DETAIL_URL_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/detailUrl.xls";
 
     public static final String PREFIX_ADD_CAR = "http://cn.pharmacyonline.com.au/checkout/cart/addCartAjax/uenc/,/product/";
 
@@ -79,9 +79,9 @@ public class ProductCacher {
 
     public static CookieStore cookieStore = null;
 
-    public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/yangpy/Desktop/chuang/productInfo.xls";
+    public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/li/Desktop/study/aucross/data/productInfo.xls";
 
-    public static final String ORI_IMG_PATH = "C:/Users/yangpy/Desktop/chuang/oriImg/";
+    public static final String ORI_IMG_PATH = "C:/Users/li/Desktop/study/aucross/images/originalImg/";
 
     public void getProductDtailsUrl(String brandMainUrl) throws Exception {
         if(brandMainUrl == null){
@@ -164,8 +164,8 @@ public class ProductCacher {
         ProductEntity productEntity = null;
         List<ProductEntity> resultList = new ArrayList<ProductEntity>();
         String url = null;
-        for(int i=0;i<30;i++){
-            url = list.get(i+30);
+        for(int i=0;i<list.size();i++){
+            url = list.get(i);
             productEntity = readProductInfo(url);
             if(productEntity == null){
                 System.out.println("商品不存在!"+list.get(i));
@@ -203,6 +203,7 @@ public class ProductCacher {
         HTMLCacher htmlCacher = new HTMLCacher();
         Parser parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser,"div","class","product-name");
+        Thread.sleep(2000);
         if (nodeList == null || nodeList.size()<1) {
             System.out.println("没有找到产品名称");
             return null;
@@ -214,6 +215,7 @@ public class ProductCacher {
         TagNameFilter tagNameFilter = new TagNameFilter("h1");
         nodeList = nodeList.extractAllNodesThatMatch(tagNameFilter,true);
         productEntity.setProductChineseName(getInfoByNodeList(nodeList));
+        Thread.sleep(2000);
         parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser,"div","class","DetailSku");
         if (nodeList == null || nodeList.size()<1) {
@@ -224,6 +226,7 @@ public class ProductCacher {
             sku=sku.substring(sku.indexOf("SKU:")+"SKU:".length(),sku.length());
             productEntity.setSku(sku);
         }
+        Thread.sleep(2000);
         parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
         AndFilter andFilter = new AndFilter(
@@ -237,6 +240,7 @@ public class ProductCacher {
             PriceNow = StringUtils.strip(PriceNow);
         }
         productEntity.setNowAmount(PriceNow);
+        Thread.sleep(2000);
         parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
         andFilter = new AndFilter(
@@ -274,6 +278,7 @@ public class ProductCacher {
             matcher.find();
             productEntity.setBrandEnglishName(StringUtils.trim(productEntity.getProductChineseName().substring(0,matcher.start())));
         }
+        Thread.sleep(2000);
         parser = new Parser(detailUrl);
         nodeList =  htmlCacher.getNodeList(parser,"div","class","std");
         if(nodeList == null || nodeList.size()<1){
@@ -306,6 +311,7 @@ public class ProductCacher {
                 productEntity.setProductDescribe(sb.toString());
             }
         }
+        Thread.sleep(2000);
         parser = new Parser(detailUrl);
         nodeList =  htmlCacher.getNodeList(parser,"div","class","box-collateral box-description");
         andFilter = new AndFilter(
@@ -440,6 +446,7 @@ public class ProductCacher {
                 }
             }
         }
+        Thread.sleep(2000);
         parser = new Parser(detailUrl);
         nodeList = htmlCacher.getNodeList(parser, "div", "class", "product-extend-specification product-extend");
         if(nodeList!=null&&nodeList.size()>0){
@@ -601,6 +608,7 @@ public class ProductCacher {
         paramMap.put("ShippingMethod","tablerate");
         HttpPost requestGetInfo = postForm(PRODUCT_INFO_URL,paramMap);
         try {
+            Thread.sleep(2000);
             client = HttpClients.createDefault();
             HttpResponse response = client.execute(requestGetInfo,httpClientContext);
             setCookieStore(response);
@@ -634,6 +642,7 @@ public class ProductCacher {
         HttpGet httpGet = new HttpGet(PREFIX_DELTE_CAR+deleteId);
        // System.out.println(PREFIX_DELTE_CAR+deleteId);
         try {
+            Thread.sleep(2000);
             HttpResponse response = client.execute(httpGet, httpClientContext);
             setCookieStore(response);
             setContext();
