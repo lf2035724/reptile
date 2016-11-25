@@ -134,36 +134,50 @@ public class HTMLCacher {
         return nodes;
     }
 
-    public void getImage(String url, String filePath, String fileName) throws Exception {
+    public void getImage(String url, String filePath, String fileName,boolean isLastImgUrl) throws Exception {
         FileOutputStream fo = null;
         InputStream ins = null;
         URL uri = null;
-        try {
-            uri = new URL(url);
-            ins = uri.openStream();
-            fo = new FileOutputStream(new File(filePath + fileName));
-            byte[] buf = new byte[1024];
-            int length = 0;
-            while ((length = ins.read(buf, 0, buf.length)) != -1) {
-                fo.write(buf, 0, length);
+        for(int i=0;i<3;i++){
+            if(!isLastImgUrl&&i<2){
+                i++;
             }
-            ins.close();
-            fo.close();
-        } catch (Exception e) {
-            throw new Exception("图片不存在");
-        } finally {
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
+            try {
+                uri = new URL(url);
+                ins = uri.openStream();
+                fo = new FileOutputStream(new File(filePath + fileName));
+                byte[] buf = new byte[1024];
+                int length = 0;
+                while ((length = ins.read(buf, 0, buf.length)) != -1) {
+                    fo.write(buf, 0, length);
                 }
-            }
-            if (fo != null) {
-                try {
-                    fo.close();
-                } catch (Exception e) {
+                //Thread.sleep(1000);
+                ins.close();
+                fo.close();
+            } catch (Exception e) {
+                if(i==2&&!isLastImgUrl){
+                    throw new Exception("图片不存在");
+                }else if(i==2&&isLastImgUrl){
                     e.printStackTrace();
+                }else{
+                    System.out.println("图片不存在1秒后重试"+url);
+                    Thread.sleep(1000);
+                    continue;
+                }
+            } finally {
+                if (ins != null) {
+                    try {
+                        ins.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (fo != null) {
+                    try {
+                        fo.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

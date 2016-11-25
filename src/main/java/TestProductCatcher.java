@@ -7,7 +7,7 @@ public class TestProductCatcher {
 
     public static final String BRAND_MAIN_URL = "http://cn.pharmacyonline.com.au/brands";
 
-    public static final String ALL_PRODUCT_FILE_URL = "C:/Users/li/Desktop/study/aucross/data/detailUrl.xls";
+    public static final String ALL_PRODUCT_FILE_URL = "C:/Users/yangpy/Desktop/chuang/detailUrl.xls";
 
     public static void main(String[] args) throws Exception {
         ProductCacher productCacher = new ProductCacher();

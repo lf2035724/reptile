@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
  */
 public class ProductCacher {
 
-    public static final String DETAIL_URL_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/detailUrl.xls";
+    public static final String DETAIL_URL_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/detailUrl.xls";
 
     public static final String PREFIX_ADD_CAR = "http://cn.pharmacyonline.com.au/checkout/cart/addCartAjax/uenc/,/product/";
 
@@ -79,9 +79,9 @@ public class ProductCacher {
 
     public static CookieStore cookieStore = null;
 
-    public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/li/Desktop/study/aucross/data/productInfo.xls";
+    public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/yangpy/Desktop/chuang/productInfo.xls";
 
-    public static final String ORI_IMG_PATH = "C:/Users/li/Desktop/study/aucross/images/originalImg/";
+    public static final String ORI_IMG_PATH = "C:/Users/yangpy/Desktop/chuang/oriImg/";
 
     public void getProductDtailsUrl(String brandMainUrl) throws Exception {
         if(brandMainUrl == null){
@@ -200,10 +200,29 @@ public class ProductCacher {
         NodeList nodeList = null;
         NodeList nodeListSecond  = null;
         NodeList nodeListThird  = null;
+        NodeList nodeListTotal = null;
         HTMLCacher htmlCacher = new HTMLCacher();
-        Parser parser = new Parser(detailUrl);
-        nodeList = htmlCacher.getNodeList(parser,"div","class","product-name");
-        Thread.sleep(2000);
+        Parser parser = null;
+        for(int i=0;i<3;i++){
+            try {
+                parser = new Parser(detailUrl);
+                if(parser!=null){
+                    break;
+                }else {
+                    System.out.println("没有获得到详细也信息1秒后重试"+detailUrl);
+                    Thread.sleep(1000);
+                }
+            }catch (Exception ex){
+                System.out.println("获得详细页信息出错，3秒后重试");
+                Thread.sleep(3000);
+            }
+        }
+        nodeListTotal = htmlCacher.getNodeList(parser,"div","class","product-view");
+        AndFilter andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "product-name")
+        );
+        nodeList =nodeListTotal.extractAllNodesThatMatch(andFilter,true);
         if (nodeList == null || nodeList.size()<1) {
             System.out.println("没有找到产品名称");
             return null;
@@ -215,9 +234,11 @@ public class ProductCacher {
         TagNameFilter tagNameFilter = new TagNameFilter("h1");
         nodeList = nodeList.extractAllNodesThatMatch(tagNameFilter,true);
         productEntity.setProductChineseName(getInfoByNodeList(nodeList));
-        Thread.sleep(2000);
-        parser = new Parser(detailUrl);
-        nodeList = htmlCacher.getNodeList(parser,"div","class","DetailSku");
+        andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "DetailSku")
+        );
+        nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter,true);
         if (nodeList == null || nodeList.size()<1) {
             System.out.println("没有找sku");
             return null;
@@ -226,10 +247,12 @@ public class ProductCacher {
             sku=sku.substring(sku.indexOf("SKU:")+"SKU:".length(),sku.length());
             productEntity.setSku(sku);
         }
-        Thread.sleep(2000);
-        parser = new Parser(detailUrl);
-        nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
-        AndFilter andFilter = new AndFilter(
+        andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "DetailPriceContain clearfix")
+        );
+        nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter, true);
+        andFilter = new AndFilter(
                 new TagNameFilter("div"),
                 new HasAttributeFilter("class", "PriceNow")
         );
@@ -240,9 +263,11 @@ public class ProductCacher {
             PriceNow = StringUtils.strip(PriceNow);
         }
         productEntity.setNowAmount(PriceNow);
-        Thread.sleep(2000);
-        parser = new Parser(detailUrl);
-        nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailPriceContain clearfix");
+        andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "DetailPriceContain clearfix")
+        );
+        nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter,true);
         andFilter = new AndFilter(
                 new TagNameFilter("p"),
                 new HasAttributeFilter("class", "PriceWas")
@@ -255,8 +280,11 @@ public class ProductCacher {
         }
         productEntity.setOriginAmount(PriceWas);
         if(PriceNow==null&&PriceWas==null){
-            parser = new Parser(detailUrl);
-            nodeList = htmlCacher.getNodeList(parser, "div", "class", "DetailNoDis PriceNow last_price_sing");
+            andFilter = new AndFilter(
+                    new TagNameFilter("div"),
+                    new HasAttributeFilter("class", "DetailNoDis PriceNow last_price_sing")
+            );
+            nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter, true);
             nodeList = nodeList.extractAllNodesThatMatch(new TagNameFilter("span"), true);
             PriceSingle = getInfoByNodeList(nodeList);
             if(PriceSingle!=null){
@@ -275,12 +303,15 @@ public class ProductCacher {
             String parten = "[\\u4e00-\\u9fa5]+";
             Pattern pattern = Pattern.compile(parten);
             Matcher matcher = pattern.matcher(productEntity.getProductChineseName());
-            matcher.find();
-            productEntity.setBrandEnglishName(StringUtils.trim(productEntity.getProductChineseName().substring(0,matcher.start())));
+            if(matcher.find()){
+                productEntity.setBrandEnglishName(StringUtils.trim(productEntity.getProductChineseName().substring(0,matcher.start())));
+            }
         }
-        Thread.sleep(2000);
-        parser = new Parser(detailUrl);
-        nodeList =  htmlCacher.getNodeList(parser,"div","class","std");
+        andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "std")
+        );
+        nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter, true);
         if(nodeList == null || nodeList.size()<1){
             System.out.println("详细说明不存在！"+detailUrl);
         }else {
@@ -289,7 +320,6 @@ public class ProductCacher {
                 productEntity.setProductDescribe(StringUtils.trim(nodeList.elementAt(0).toPlainTextString()));
             }else{
                 SimpleNodeIterator iterator = nodeList.elementAt(0).getChildren().elements();
-                boolean saveFlag = false;
                 StringBuffer sb = new StringBuffer();
                 while (iterator.hasMoreNodes()){
                     node = iterator.nextNode();
@@ -311,9 +341,11 @@ public class ProductCacher {
                 productEntity.setProductDescribe(sb.toString());
             }
         }
-        Thread.sleep(2000);
-        parser = new Parser(detailUrl);
-        nodeList =  htmlCacher.getNodeList(parser,"div","class","box-collateral box-description");
+        andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "box-collateral box-description")
+        );
+        nodeList =  nodeListTotal.extractAllNodesThatMatch(andFilter,true);
         andFilter = new AndFilter(
                 new TagNameFilter("div"),
                 new HasAttributeFilter("class", "desc-title")
@@ -382,7 +414,7 @@ public class ProductCacher {
                             sb.append("*");
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
-                        productEntity.setCharacteristic(sb.toString());
+                        productEntity.setFunctionDescripe(sb.toString());
                     }
 
                     if(node2.toPlainTextString().indexOf("功能概述：") >= 0){
@@ -446,9 +478,28 @@ public class ProductCacher {
                 }
             }
         }
-        Thread.sleep(2000);
-        parser = new Parser(detailUrl);
-        nodeList = htmlCacher.getNodeList(parser, "div", "class", "product-extend-specification product-extend");
+        if(StringUtils.isEmpty(productEntity.getUnitContent())){
+            String temp = productEntity.getUnitContent();
+            String parten = "([0-9]+[g]{1}[\\s]{1}[X]{1}[\\s]{1}[0-9]+)|([0-9]+[m]{1}[l]{1}[\\s]{1}[X]{1}[\\s]{1}[0-9]+)([0-9]+[m]{1}[L]{1}[\\s]{1}[X]{1}[\\s]{1}[0-9]+)|([0-9]+[k]{1}[g]{1}[\\s]{1}[X]{1}[\\s]{1}[0-9]+)|([0-9]+[\\u7247]{1}[\\s]{1}[X]{1}[\\s]{1}[0-9]+)|([0-9]+[\\u7c92]{1}[\\s]{1}[X]{1}[\\s]{1}[0-9]+)|([0-9]+[\\u514b]{1}[\\s]{1}[X]{1}[\\s]{1}[0-9]+)";
+            String parten2 = "([0-9]+[\\u7247]{1})|([0-9]+[\\u7c92]{1})|([0-9]+[\\u514b]{1})|([0-9]+[g]{1})|([0-9]+[m]{1}[l]{1})|([0-9]+[m]{1}[L]{1})|([0-9]+[m]{1}[l]{1})|([0-9]+[k]{1}[g]{1})|([0-9]+[K]{1}[G]{1})|([0-9]+[L]{1})";
+            Pattern pattern = Pattern.compile(parten);
+            Matcher matcher = pattern.matcher(productEntity.getProductChineseName());
+            if(matcher.find()){
+                temp = productEntity.getProductChineseName().substring(matcher.start(),matcher.end());
+            }else{
+                pattern = Pattern.compile(parten2);
+                matcher = pattern.matcher(productEntity.getProductChineseName());
+                if (matcher.find()){
+                    temp = productEntity.getProductChineseName().substring(matcher.start(),matcher.end());
+                }
+            }
+            productEntity.setUnitContent(StringUtils.trim(temp));
+        }
+        andFilter = new AndFilter(
+                new TagNameFilter("div"),
+                new HasAttributeFilter("class", "product-extend-specification product-extend")
+        );
+        nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter,true);
         if(nodeList!=null&&nodeList.size()>0){
             nodeList = nodeList.extractAllNodesThatMatch(new TagNameFilter("td"), true);
         }
@@ -461,19 +512,29 @@ public class ProductCacher {
                     productEntity.setProductEnglishName(node4.toPlainTextString());
                     index2++;
                 }
+                if(index2 == 3){
+                    productEntity.setBrandEnglishName(node4.toPlainTextString());
+                    index2++;
+                }
                 if(node4.toPlainTextString().indexOf("英文名称") >= 0){
                     index2=1;
                 }
+                if(node4.toPlainTextString().indexOf("品牌") >= 0){
+                    index2=3;
+                }
             }
         }
-        getOriImg(htmlCacher,detailUrl,productEntity);
+        getOriImg(htmlCacher,nodeListTotal,productEntity);
         System.out.println(productEntity);
         return productEntity;
     }
 
-    public void getOriImg(HTMLCacher htmlCacher,String detailUrl,ProductEntity productEntity) throws Exception {
-        Parser parser = new Parser(detailUrl);
-        NodeList nodeList = htmlCacher.getNodeList(parser, "a", "class", "cloud-zoom");
+    public void getOriImg(HTMLCacher htmlCacher,NodeList totalNodeList,ProductEntity productEntity) throws Exception {
+        AndFilter andFilter = new AndFilter(
+                new TagNameFilter("a"),
+                new HasAttributeFilter("class", "cloud-zoom")
+        );
+        NodeList nodeList = totalNodeList.extractAllNodesThatMatch(andFilter,true);
         ImageTag imageTag = null;
         String imageUrl = null;
         if(nodeList!=null&&nodeList.size()>0){
@@ -492,21 +553,32 @@ public class ProductCacher {
             return;
         }
         imageUrl = imageTag.getImageURL();
-        imageUrl = imageUrl.substring(0,imageUrl.indexOf(".jpg")+".jpg".length());
+        String postfix = null;
+        if(imageUrl.indexOf(".jpg")>0){
+            imageUrl = imageUrl.substring(0,imageUrl.indexOf(".jpg")+".jpg".length());
+            postfix = ".jpg";
+        }else if(imageUrl.indexOf(".gif")>0){
+            imageUrl = imageUrl.substring(0,imageUrl.indexOf(".gif")+".gif".length());
+            postfix = ".gif";
+        }else if(imageUrl.indexOf("?") > 0){
+            imageUrl = imageUrl.substring(0,imageUrl.indexOf("?"));
+        }else {
+            imageUrl = imageUrl+".jpg";
+        }
         String tempUrl = imageUrl.substring(imageUrl.lastIndexOf("/") + 1, imageUrl.length());
-        if(tempUrl.indexOf(productEntity.getSku()) >= 0){
-            String tempUrl2 = imageUrl.substring(0,imageUrl.lastIndexOf("/")+1)+productEntity.getSku()+".jpg";
+        if(tempUrl.indexOf(productEntity.getSku()+postfix) >= 0){
+            String tempUrl2 = imageUrl.substring(0,imageUrl.lastIndexOf("/")+1)+productEntity.getSku()+postfix;
             try {
-                htmlCacher.getImage(tempUrl2,ORI_IMG_PATH,productEntity.getSku() + ".jpg");
+                htmlCacher.getImage(tempUrl2,ORI_IMG_PATH,productEntity.getSku() + postfix,false);
             } catch (Exception e) {
                 if("图片不存在".equals(e.getMessage())){
-                    htmlCacher.getImage(imageUrl,ORI_IMG_PATH,productEntity.getSku() + ".jpg");
+                    htmlCacher.getImage(imageUrl,ORI_IMG_PATH,productEntity.getSku() + postfix,true);
                 }else {
                     e.printStackTrace();
                 }
             }
         }else {
-            htmlCacher.getImage(imageUrl,ORI_IMG_PATH,productEntity.getSku() + ".jpg");
+            htmlCacher.getImage(imageUrl,ORI_IMG_PATH,productEntity.getSku() + postfix,true);
         }
     }
     public void writeExcel(List<ProductEntity> entityList){
@@ -608,7 +680,6 @@ public class ProductCacher {
         paramMap.put("ShippingMethod","tablerate");
         HttpPost requestGetInfo = postForm(PRODUCT_INFO_URL,paramMap);
         try {
-            Thread.sleep(2000);
             client = HttpClients.createDefault();
             HttpResponse response = client.execute(requestGetInfo,httpClientContext);
             setCookieStore(response);
@@ -642,7 +713,6 @@ public class ProductCacher {
         HttpGet httpGet = new HttpGet(PREFIX_DELTE_CAR+deleteId);
        // System.out.println(PREFIX_DELTE_CAR+deleteId);
         try {
-            Thread.sleep(2000);
             HttpResponse response = client.execute(httpGet, httpClientContext);
             setCookieStore(response);
             setContext();
