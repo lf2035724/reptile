@@ -89,10 +89,17 @@ public class HTMLCacher {
     public NodeList getNodeList(String url, String tagName, String attributeName, String attributeValue)
             throws Exception {
         Parser parser = null;
-        try {
-            parser = new Parser(url);
-        }catch (Exception ex){
-            throw new Exception("警告！该连接失效："+url);
+        for(int i=0;i<6;i++){
+            try {
+                parser = new Parser(url);
+                if(parser == null){
+                    Thread.sleep(2000);
+                    continue;
+                }
+            }catch (Exception ex){
+                    Thread.sleep(2000);
+                    continue;
+            }
         }
         AndFilter andFilter = new AndFilter(
                 new TagNameFilter(tagName),
@@ -202,15 +209,15 @@ public class HTMLCacher {
             return true;
         }
         String htmlContent = null;
-        for(int i=0;i<3;i++){
+        for(int i=0;i<6;i++){
             try {
                 htmlContent = getHTMLContent(href);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             if(StringUtils.isEmpty(htmlContent)){
-                Thread.sleep(5000);
-                System.out.println("通过连接获取到html为空，5秒后再次尝试href:"+href);
+                Thread.sleep(2000);
+                System.out.println("通过连接获取到html为空，2秒后再次尝试href:"+href);
             }else{
                 break;
             }

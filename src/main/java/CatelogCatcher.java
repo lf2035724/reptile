@@ -21,15 +21,15 @@ import java.util.Map;
  */
 public class CatelogCatcher {
 
-    public static final String FIRST_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/fistCatelog.xls";
+    public static final String FIRST_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/fistCatelog.xls";
 
-    public static final String SECOND_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/secondCatelog.xls";
+    public static final String SECOND_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/secondCatelog.xls";
 
-    public static final String THIRD_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/thirdCatelog.xls";
+    public static final String THIRD_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/thirdCatelog.xls";
 
-    public static final String FOUR_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/fourCatelog.xls";
+    public static final String FOUR_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/data/fourCatelog.xls";
 
-    public static final String FIVE_CATELOG_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/fiveCatelog.xls";
+    public static final String FIVE_CATELOG_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/fiveCatelog.xls";
 
 
     public void getAllFirstCatelog(String mainUrl) {
