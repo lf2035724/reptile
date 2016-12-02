@@ -58,7 +58,7 @@ import java.util.regex.Pattern;
  */
 public class ProductCacher {
 
-    public static final String DETAIL_URL_FILE_PATH = "C:/Users/li/Desktop/study/aucross/data/detailUrl.xls";
+    public static final String DETAIL_URL_FILE_PATH = "C:/Users/yangpy/Desktop/chuang/detailUrl.xls";
 
     public static final String PREFIX_ADD_CAR = "http://cn.pharmacyonline.com.au/checkout/cart/addCartAjax/uenc/,/product/";
 
@@ -80,11 +80,11 @@ public class ProductCacher {
 
     public static CookieStore cookieStore = null;
 
-    public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/li/Desktop/study/aucross/data/productInfo.xls";
+    public static final String ALL_PRODUCT_INFO_FILE = "C:/Users/yangpy/Desktop/chuang/productInfo.xls";
 
-    public static final String ORI_IMG_PATH = "C:/Users/li/Desktop/study/aucross/images/originalImg/";
+    public static final String ORI_IMG_PATH = "C:/Users/yangpy/Desktop/chuang/oriImg/";
 
-    public static final String ALL_PRODUCT_FILE_URL = "C:/Users/li/Desktop/study/aucross/data/detailUrl.xls";
+    public static final String ALL_PRODUCT_FILE_URL = "C:/Users/yangpy/Desktop/chuang/detailUrl.xls";
 
     public void getProductDtailsUrl(String brandMainUrl) throws Exception {
         if(brandMainUrl == null){
