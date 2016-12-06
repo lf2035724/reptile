@@ -13,8 +13,8 @@ public class TestProductCatcher {
         ProductCacher productCacher = new ProductCacher();
         //productCacher.getProductDtailsUrl(BRAND_MAIN_URL);//所有产品链接
         //String weight = productCacher.getWeight("107379");
-        productCacher.readProductInfo("http://cn.pharmacyonline.com.au/1113497.html");
-        //productCacher.readAllProductInfoToExcel(1,2);
+        //productCacher.readProductInfo("http://cn.pharmacyonline.com.au/1102661.html");
+        productCacher.readAllProductInfoToExcel(1,2);
         //ProductEntity productEntity = new ProductEntity();
        // productEntity.setSku("901096");
         //productCacher.getOriImg(new HTMLCacher(),"http://cn.pharmacyonline.com.au/1112266.html",productEntity);
