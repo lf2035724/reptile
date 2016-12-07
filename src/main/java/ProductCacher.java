@@ -183,7 +183,7 @@ public class ProductCacher {
             resultTemp.add(list.get(i).get(1));
             resultList.add(resultTemp);
             resultOver.add((Integer) list.get(i).get(1));
-            if (resultList.size() == 10 || i == list.size() - 1) {
+            if (resultList.size() == 20 || i == list.size() - 1) {
                 writeExcel(resultList);
                 writeExcelOver(resultOver);
                 resultList.clear();
@@ -323,9 +323,7 @@ public class ProductCacher {
             }
         }
         productEntity.setProductId(detailUrl.substring(detailUrl.indexOf(".html") - 7, detailUrl.indexOf(".html")));
-        System.out.println("开始获得weight");
         productEntity.setWeight(getWeight(productEntity.getProductId().substring(1, productEntity.getProductId().length())));
-        System.out.println("weight结束");
         if (!StringUtils.isEmpty(productEntity.getProductChineseName())) {
             String parten = "[\\u4e00-\\u9fa5]+";
             Pattern pattern = Pattern.compile(parten);
@@ -342,44 +340,55 @@ public class ProductCacher {
         if (nodeList == null || nodeList.size() < 1) {
             System.out.println("详细说明不存在！" + detailUrl);
         } else {
-            int tempIndex = 0;
-            if (nodeList.elementAt(0).getChildren() == null || nodeList.elementAt(0).getChildren().size() == 1) {
+            andFilter = new AndFilter(
+                    new TagNameFilter("div"),
+                    new HasAttributeFilter("class", "desc-title")
+            );
+            NodeList nodeListDescripTemp = nodeList.extractAllNodesThatMatch(andFilter, true);
+            if (nodeList.elementAt(0).toPlainTextString().length() > 150
+                    && nodeList.elementAt(0).toPlainTextString().indexOf("产品介绍") < 0
+                    && (nodeListDescripTemp == null ||nodeListDescripTemp.size()<1)) {
                 productEntity.setProductDescribe(StringUtils.trim(nodeList.elementAt(0).toPlainTextString()));
             } else {
-                SimpleNodeIterator iterator = nodeList.elementAt(0).getChildren().elements();
-                int temp = 0;
-                while (iterator.hasMoreNodes()) {
-                    if (temp > 3) {
-                        break;
-                    }
-                    Node nodeTemp = iterator.nextNode();
-                    if (nodeTemp instanceof TextNode && nodeTemp.toPlainTextString().length() > 40) {
-                        productEntity.setProductDescribe(StringUtils.trim(nodeTemp.toPlainTextString()));
-                        break;
-                    }
-                    temp++;
-                }
-                if (StringUtils.isEmpty(productEntity.getProductDescribe())) {
-                    iterator = nodeList.elementAt(0).getChildren().elements();
-                    StringBuffer sb = new StringBuffer();
+                int tempIndex = 0;
+                if (nodeList.elementAt(0).getChildren() == null || nodeList.elementAt(0).getChildren().size() == 1 && StringUtils.isEmpty(productEntity.getProductDescribe())) {
+                    productEntity.setProductDescribe(StringUtils.trim(nodeList.elementAt(0).toPlainTextString()));
+                } else {
+                    SimpleNodeIterator iterator = nodeList.elementAt(0).getChildren().elements();
+                    int temp = 0;
                     while (iterator.hasMoreNodes()) {
-                        node = iterator.nextNode();
-                        if (node instanceof Div && tempIndex == 0) {
+                        if (temp > 3) {
                             break;
                         }
-                        if (node instanceof Div && tempIndex != 0) {
+                        Node nodeTemp = iterator.nextNode();
+                        if (nodeTemp instanceof TextNode && nodeTemp.toPlainTextString().length() > 40) {
+                            productEntity.setProductDescribe(StringUtils.trim(nodeTemp.toPlainTextString()));
                             break;
                         }
-                        if (node instanceof ParagraphTag) {
-                            if (sb.length() < 1) {
-                                sb.append(StringUtils.trim(node.toPlainTextString()));
-                            } else {
-                                sb.append("*" + StringUtils.trim(node.toPlainTextString().replaceAll("\\*", "")));
-                            }
-                        }
-                        tempIndex++;
+                        temp++;
                     }
-                    productEntity.setProductDescribe(StringUtils.trim(sb.toString()));
+                    if (StringUtils.isEmpty(productEntity.getProductDescribe())) {
+                        iterator = nodeList.elementAt(0).getChildren().elements();
+                        StringBuffer sb = new StringBuffer();
+                        while (iterator.hasMoreNodes()) {
+                            node = iterator.nextNode();
+                            if (node instanceof Div && tempIndex == 0) {
+                                break;
+                            }
+                            if (node instanceof Div && tempIndex != 0) {
+                                break;
+                            }
+                            if (node instanceof ParagraphTag) {
+                                if (sb.length() < 1) {
+                                    sb.append(StringUtils.trim(node.toPlainTextString()));
+                                } else {
+                                    sb.append("*" + StringUtils.trim(node.toPlainTextString().replaceAll("\\*", "")));
+                                }
+                            }
+                            tempIndex++;
+                        }
+                        productEntity.setProductDescribe(StringUtils.trim(sb.toString()));
+                    }
                 }
             }
         }
@@ -389,16 +398,16 @@ public class ProductCacher {
         );
         nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter, true);
         boolean isBr = false;
-        if(nodeList==null||nodeList.size()<1){
+        if (nodeList == null || nodeList.size() < 1) {
             isBr = true;
         }
-        if(isBr){
+        if (isBr) {
             andFilter = new AndFilter(
                     new TagNameFilter("p"),
                     new HasAttributeFilter("class", "d-list")
             );
             nodeList = nodeListTotal.extractAllNodesThatMatch(andFilter, true);
-            if(nodeList!=null||nodeList.size()>0){
+            if (nodeList != null && nodeList.size() > 0) {
                 isBr = false;
             }
         }
@@ -420,9 +429,9 @@ public class ProductCacher {
             node = iterator.nextNode();
             node2 = node;
             StringBuffer sb = new StringBuffer();
-            if(scripTemp==0){
+            if (scripTemp == 0) {
                 scripTemp++;
-                if(node2.getNextSibling()!=null&&node2.getNextSibling() instanceof TextNode && node2.getNextSibling().toPlainTextString().length()>30 && StringUtils.isEmpty(productEntity.getProductDescribe())){
+                if (node2.getNextSibling() != null && node2.getNextSibling() instanceof TextNode && node2.getNextSibling().toPlainTextString().length() > 30 && StringUtils.isEmpty(productEntity.getProductDescribe())) {
                     productEntity.setProductDescribe(StringUtils.trim(node2.getNextSibling().toPlainTextString()));
                 }
             }
@@ -435,10 +444,10 @@ public class ProductCacher {
                 if (node instanceof Div) {
                     break;
                 }
-                if(isBr && node instanceof TagNode){
+                if (isBr && node instanceof TagNode) {
                     continue;
                 }
-                Node node3  = node;
+                Node node3 = node;
                 TextNode textNode = null;
                 if (isBr) {
                     textNode = (TextNode) node;
@@ -448,10 +457,10 @@ public class ProductCacher {
                         if (node3.toPlainTextString().indexOf("规格：") >= 0) {
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("规格：") + "规格：".length());
                             productEntity.setUnitContent(StringUtils.trim(temp));
-                        }else if (node3.toPlainTextString().indexOf("容量：") >= 0) {
+                        } else if (node3.toPlainTextString().indexOf("容量：") >= 0) {
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("容量：") + "容量：".length());
                             productEntity.setUnitContent(StringUtils.trim(temp));
-                        }else if (node3.toPlainTextString().indexOf("品牌：") >= 0) {
+                        } else if (node3.toPlainTextString().indexOf("品牌：") >= 0) {
                             String parten = "[\\u4e00-\\u9fa5]+";
                             String parten2 = "[a-z0-9A-Z]*";
                             Pattern pattern = Pattern.compile(parten);
@@ -462,20 +471,20 @@ public class ProductCacher {
                                 temp = temp.replaceAll("/", "");
                                 productEntity.setBrandChineseName(StringUtils.trim(temp));
                             }
-                        }else if (node3.toPlainTextString().indexOf("产地：") >= 0) {
+                        } else if (node3.toPlainTextString().indexOf("产地：") >= 0) {
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("产地：") + "产地：".length());
                             productEntity.setProductingArea(StringUtils.trim(temp));
-                        }else{
-                            if(tempFirstDescri == 0){
+                        } else if(StringUtils.isEmpty(productEntity.getUnitContent())){
+                            if (tempFirstDescri == 0) {
                                 sb.append(StringUtils.trim(node3.toPlainTextString()));
-                            }else{
+                            } else {
                                 sb.append("*");
                                 sb.append(StringUtils.trim(node3.toPlainTextString()));
                             }
+                            productEntity.setProductDescribe(StringUtils.trim(sb.toString()));
                         }
-                        productEntity.setProductDescribe(StringUtils.trim(sb.toString()));
-                        tempFirstDescri ++;
-                    }else if (node2.toPlainTextString().indexOf("产品特点：") >= 0) {
+                        tempFirstDescri++;
+                    } else if (node2.toPlainTextString().indexOf("产品特点：") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -483,7 +492,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setCharacteristic(sb.toString());
-                    }else if (node2.toPlainTextString().indexOf("产品功能：") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("产品功能：") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -491,7 +500,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setFunctionDescripe(sb.toString());
-                    }else if (node2.toPlainTextString().indexOf("功能概述：") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("功能概述：") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -499,7 +508,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setFunctionDescripe(sb.toString());
-                    }else if (node2.toPlainTextString().indexOf("主要成份：") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("主要成份：") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -507,7 +516,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setMainContent(sb.toString());
-                    }else if (node2.toPlainTextString().indexOf("适用人群") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("适用人群") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -515,7 +524,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setIntendedFor(sb.toString());
-                    }else if (node2.toPlainTextString().indexOf("使用方法") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("使用方法") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -523,7 +532,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setUsageMethod(sb.toString());
-                    }else if (node2.toPlainTextString().indexOf("注意事项") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("注意事项") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -531,7 +540,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setAttention(sb.toString());
-                    }else if (node2.toPlainTextString().indexOf("Warnings") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("Warnings") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -822,18 +831,12 @@ public class ProductCacher {
         for (int i = 0; i < 5; i++) {
             try {
                 client = HttpClients.createDefault();
-                System.out.println("执行第一次请求");
                 HttpResponse response = client.execute(request);
-                System.out.println("第一次请求结束");
                 if (response == null && i < 5) {
                     continue;
                 }
-                System.out.println("setcookie");
                 setCookieStore(response);
-                System.out.println("setcookieOver");
-                System.out.println("setContext");
                 setContext();
-                System.out.println("setContextOver");
                 in = new BufferedReader(new InputStreamReader(response.getEntity()
                         .getContent(), "utf-8"));
                 StringBuffer sb = new StringBuffer("");
@@ -844,6 +847,9 @@ public class ProductCacher {
                 }
                 in.close();
                 content = sb.toString();
+                if(content!=null){
+                    break;
+                }
             } catch (Exception ex) {
                 continue;
             } finally {
@@ -870,9 +876,7 @@ public class ProductCacher {
         HttpPost requestGetInfo = postForm(PRODUCT_INFO_URL, paramMap);
         for (int i = 0; i < 5; i++) {
             try {
-                System.out.println("执行第二次请求");
                 client = HttpClients.createDefault();
-                System.out.println("第二次请求结束");
                 HttpResponse response = client.execute(requestGetInfo, httpClientContext);
                 if (response == null && i < 5) {
                     Thread.sleep(1000);
@@ -890,6 +894,9 @@ public class ProductCacher {
                 }
                 in.close();
                 content = sb.toString();
+                if(content!=null){
+                    break;
+                }
             } catch (Exception ex) {
                 continue;
             } finally {
@@ -913,34 +920,14 @@ public class ProductCacher {
         // System.out.println(PREFIX_DELTE_CAR+deleteId);
         for (int i = 0; i < 5; i++) {
             try {
-                System.out.println("执行第三次请求");
                 HttpResponse response = client.execute(httpGet, httpClientContext);
-                System.out.println("第三次请求结束");
-                if (response == null && i < 5) {
+                if (response == null) {
                     continue;
+                }else{
+                    break;
                 }
-                setCookieStore(response);
-                setContext();
-                in = new BufferedReader(new InputStreamReader(response.getEntity()
-                        .getContent(), "utf-8"));
-                StringBuffer sb = new StringBuffer("");
-                String line = "";
-                String NL = System.getProperty("line.separator");
-                while ((line = in.readLine()) != null) {
-                    sb.append(line + NL);
-                }
-                in.close();
-                content = sb.toString();
             } catch (Exception ex) {
                 continue;
-            } finally {
-                if (in != null) {
-                    try {
-                        in.close();// 最后要关闭BufferedReader
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
             }
         }
         //System.out.println(content);
