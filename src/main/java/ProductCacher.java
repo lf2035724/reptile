@@ -324,6 +324,12 @@ public class ProductCacher {
         }
         productEntity.setProductId(detailUrl.substring(detailUrl.indexOf(".html") - 7, detailUrl.indexOf(".html")));
         productEntity.setWeight(getWeight(productEntity.getProductId().substring(1, productEntity.getProductId().length())));
+        if(productEntity.getWeight()!=null&&productEntity.getWeight().indexOf("{")>0){
+            productEntity.setWeight(getWeight(productEntity.getProductId().substring(1, productEntity.getProductId().length())));
+        }
+        if(productEntity.getWeight()!=null&&productEntity.getWeight().indexOf(":")>0){
+            productEntity.setWeight(getWeight(productEntity.getProductId().substring(1, productEntity.getProductId().length())));
+        }
         if (!StringUtils.isEmpty(productEntity.getProductChineseName())) {
             String parten = "[\\u4e00-\\u9fa5]+";
             Pattern pattern = Pattern.compile(parten);
@@ -340,6 +346,12 @@ public class ProductCacher {
         if (nodeList == null || nodeList.size() < 1) {
             System.out.println("详细说明不存在！" + detailUrl);
         } else {
+            if(nodeList.elementAt(0).getChildren().elementAt(0) instanceof TextNode
+                    && StringUtils.trim(nodeList.elementAt(0).getChildren().elementAt(0).toPlainTextString()).length()<4){
+                if(nodeList.elementAt(0).getChildren().elementAt(1) instanceof ParagraphTag){
+                    productEntity.setProductDescribe(StringUtils.trim(nodeList.elementAt(0).getChildren().elementAt(1).toPlainTextString()));
+                }
+            }
             andFilter = new AndFilter(
                     new TagNameFilter("div"),
                     new HasAttributeFilter("class", "desc-title")
@@ -378,6 +390,9 @@ public class ProductCacher {
                             if (node instanceof Div && tempIndex != 0) {
                                 break;
                             }
+                            if(tempIndex==0&&node instanceof TextNode && StringUtils.trim(node.toPlainTextString()).length() < 5){
+                                break;
+                            }
                             if (node instanceof ParagraphTag) {
                                 if (sb.length() < 1) {
                                     sb.append(StringUtils.trim(node.toPlainTextString()));
@@ -392,6 +407,7 @@ public class ProductCacher {
                 }
             }
         }
+
         andFilter = new AndFilter(
                 new TagNameFilter("p"),
                 new HasAttributeFilter("class", "desc-list")
@@ -452,8 +468,11 @@ public class ProductCacher {
                 if (isBr) {
                     textNode = (TextNode) node;
                 }
-                if (node3 instanceof ParagraphTag && !isBr) {
-                    if (node2.toPlainTextString().indexOf("产品介绍：") >= 0) {
+                String partenTemp = "[\\u4e00-\\u9fa5]+";
+                Pattern patternTemp = Pattern.compile(partenTemp);
+                Matcher matcherTemp = patternTemp.matcher(node3.toPlainTextString());
+                if ((node3 instanceof ParagraphTag || (matcherTemp.find()&&node3 instanceof TextNode))&& !isBr  ) {
+                    if (node2.toPlainTextString().indexOf("产品介绍") >= 0) {
                         if (node3.toPlainTextString().indexOf("规格：") >= 0) {
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("规格：") + "规格：".length());
                             productEntity.setUnitContent(StringUtils.trim(temp));
@@ -461,9 +480,8 @@ public class ProductCacher {
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("容量：") + "容量：".length());
                             productEntity.setUnitContent(StringUtils.trim(temp));
                         } else if (node3.toPlainTextString().indexOf("品牌：") >= 0) {
-                            String parten = "[\\u4e00-\\u9fa5]+";
                             String parten2 = "[a-z0-9A-Z]*";
-                            Pattern pattern = Pattern.compile(parten);
+                            Pattern pattern = Pattern.compile(partenTemp);
                             String temp = node3.toPlainTextString().substring(node3.toPlainTextString().indexOf("品牌：") + "品牌：".length());
                             Matcher matcher = pattern.matcher(temp);
                             if (matcher.find()) {
@@ -484,7 +502,7 @@ public class ProductCacher {
                             productEntity.setProductDescribe(StringUtils.trim(sb.toString()));
                         }
                         tempFirstDescri++;
-                    } else if (node2.toPlainTextString().indexOf("产品特点：") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("产品特点") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -492,7 +510,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setCharacteristic(sb.toString());
-                    } else if (node2.toPlainTextString().indexOf("产品功能：") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("产品功能") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -500,7 +518,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setFunctionDescripe(sb.toString());
-                    } else if (node2.toPlainTextString().indexOf("功能概述：") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("功能概述") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -508,7 +526,7 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setFunctionDescripe(sb.toString());
-                    } else if (node2.toPlainTextString().indexOf("主要成份：") >= 0) {
+                    } else if (node2.toPlainTextString().indexOf("主要成份") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -540,7 +558,16 @@ public class ProductCacher {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         }
                         productEntity.setAttention(sb.toString());
-                    } else if (node2.toPlainTextString().indexOf("Warnings") >= 0) {
+                    }else if (node2.toPlainTextString().indexOf("材质") >= 0) {
+                        if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
+                            sb.append("*");
+                            sb.append(replaceTag(node3.toPlainTextString()));
+                        }
+                        productEntity.setMainContent(sb.toString());
+                    }
+                    else if (node2.toPlainTextString().indexOf("Warnings") >= 0) {
                         if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString())) && sb.length() < 2) {
                             sb.append(replaceTag(node3.toPlainTextString()));
                         } else if (!StringUtils.isEmpty(StringUtils.trim(node3.toPlainTextString()))) {
@@ -552,14 +579,14 @@ public class ProductCacher {
                     index++;
                     continue;
                 } else if (isBr) {
-                    if (node2.toPlainTextString().indexOf("产品介绍：") >= 0) {
+                    if (node2.toPlainTextString().indexOf("产品介绍") >= 0) {
                         if (index == 0) {
                             sb.append(replaceTag(textNode.toPlainTextString()));
                             productEntity.setProductDescribe(StringUtils.trim(sb.toString()));
                         }
                     }
                     if (textNode != null) {
-                        if (node2.toPlainTextString().indexOf("产品特点：") >= 0) {
+                        if (node2.toPlainTextString().indexOf("产品特点") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
@@ -569,7 +596,7 @@ public class ProductCacher {
                             productEntity.setCharacteristic(sb.toString());
                         }
 
-                        if (node2.toPlainTextString().indexOf("产品功能：") >= 0) {
+                        if (node2.toPlainTextString().indexOf("产品功能") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
@@ -579,7 +606,7 @@ public class ProductCacher {
                             productEntity.setFunctionDescripe(sb.toString());
                         }
 
-                        if (node2.toPlainTextString().indexOf("功能概述：") >= 0) {
+                        if (node2.toPlainTextString().indexOf("功能概述") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
@@ -588,7 +615,7 @@ public class ProductCacher {
                             }
                             productEntity.setFunctionDescripe(sb.toString());
                         }
-                        if (node2.toPlainTextString().indexOf("主要成份：") >= 0) {
+                        if (node2.toPlainTextString().indexOf("主要成份") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
@@ -597,7 +624,7 @@ public class ProductCacher {
                             }
                             productEntity.setMainContent(sb.toString());
                         }
-                        if (node2.toPlainTextString().indexOf("适用人群：") >= 0) {
+                        if (node2.toPlainTextString().indexOf("适用人群") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
@@ -606,7 +633,7 @@ public class ProductCacher {
                             }
                             productEntity.setIntendedFor(sb.toString());
                         }
-                        if (node2.toPlainTextString().indexOf("使用方法：") >= 0) {
+                        if (node2.toPlainTextString().indexOf("使用方法") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
@@ -615,7 +642,7 @@ public class ProductCacher {
                             }
                             productEntity.setUsageMethod(sb.toString());
                         }
-                        if (node2.toPlainTextString().indexOf("注意事项：") >= 0) {
+                        if (node2.toPlainTextString().indexOf("注意事项") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
@@ -624,7 +651,7 @@ public class ProductCacher {
                             }
                             productEntity.setAttention(sb.toString());
                         }
-                        if (node2.toPlainTextString().indexOf("Warnings:") >= 0) {
+                        if (node2.toPlainTextString().indexOf("Warnings") >= 0) {
                             if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString())) && sb.length() < 2) {
                                 sb.append(replaceTag(textNode.toPlainTextString()));
                             } else if (!StringUtils.isEmpty(StringUtils.trim(textNode.toPlainTextString()))) {
